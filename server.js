@@ -38,7 +38,7 @@ const manifestPath = path.join(outputRoot, "manifest.json");
 const historyPath = path.join(outputRoot, "history.json");
 const trashDir = path.join(outputRoot, ".trash");
 const port = Number(process.env.PORT || 5174);
-const appVersion = "image-studio-pwa-v20";
+const appVersion = "image-studio-pwa-v21";
 const defaultImageApiBase = process.env.IMAGE_API_BASE || process.env.IMG_API_BASE || "https://imgv1.aiapis.help";
 let requestSeq = 0;
 
@@ -119,6 +119,14 @@ function explainUpstreamError(message, request = {}) {
   }
   if (/does not allow image generation|openai_image|image generation/i.test(text)) {
     return "当前 API Key 所属分组没有图片生成权限。上游要求在 supported_model_scopes 中启用 openai_image，或更换有图片生成权限的 Key。";
+  }
+  if (/invalid token|invalid api.?key|unauthorized|authentication|auth/i.test(text)) {
+    const requestId = extractRequestId(text);
+    return [
+      "API Key 无效或没有在当前设备正确填写。手机 PWA 不会自动同步电脑浏览器里保存的 Key，请在手机页面点「服务商」，重新粘贴完整原始 API Key。",
+      "不要使用带省略号的显示版 Key，也不要多复制空格或换行。",
+      requestId ? `request id: ${requestId}` : ""
+    ].filter(Boolean).join(" ");
   }
   return text;
 }

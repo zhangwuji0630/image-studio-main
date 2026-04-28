@@ -112,7 +112,33 @@ image-studio-layout-v15
 - “生成图库”不再作为默认页，改为第二项入口。
 - 首页空状态可见：`描述你想看到的画面`。
 - `/api/health` 返回 `image-studio-layout-v15`。
-- `npm run check` 通过。## 2026-04-28 16:35 更新：手机版 PWA 版
+- `npm run check` 通过。## 2026-04-28 16:50 更新：手机 PWA Key 错误提示优化
+
+当前运行版本：
+
+```text
+image-studio-pwa-v21
+```
+
+问题：
+
+- 手机 PWA 生成时出现 `Invalid token`。
+- 这通常不是 PWA 本身故障，而是手机端没有同步电脑浏览器里保存的 API Key，或手机端粘贴的 Key 不完整 / 无效。
+
+处理：
+
+- 针对 `Invalid token`、`invalid api key`、`unauthorized`、`authentication` 等上游错误，改成更易懂的中文提示。
+- 提醒用户在手机页面点「服务商」，重新粘贴完整原始 API Key。
+- 提醒不要使用带省略号的显示版 Key，也不要复制多余空格或换行。
+- 版本升级到 `image-studio-pwa-v21`，同步刷新前端资源和 Service Worker 缓存名。
+
+验证：
+
+- `npm run check` 通过。
+- `/api/health` 返回 `image-studio-pwa-v21`。
+- 使用测试无效 Key 调 `/api/generate`，返回新的中文 Key 提示。
+
+## 2026-04-28 16:35 更新：手机版 PWA 版
 
 当前运行版本：
 

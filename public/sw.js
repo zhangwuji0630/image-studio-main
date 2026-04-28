@@ -1,9 +1,9 @@
-const CACHE_NAME = "image-studio-pwa-v20";
+const CACHE_NAME = "image-studio-pwa-v21";
 const APP_SHELL = [
   "/",
   "/index.html",
-  "/styles.css?v=image-studio-pwa-v20",
-  "/app.js?v=image-studio-pwa-v20",
+  "/styles.css?v=image-studio-pwa-v21",
+  "/app.js?v=image-studio-pwa-v21",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png"
