@@ -112,7 +112,35 @@ image-studio-layout-v15
 - “生成图库”不再作为默认页，改为第二项入口。
 - 首页空状态可见：`描述你想看到的画面`。
 - `/api/health` 返回 `image-studio-layout-v15`。
-- `npm run check` 通过。## 2026-04-28 16:17 更新：多图生成、弹窗视觉、图库标题和首页引导
+- `npm run check` 通过。## 2026-04-28 16:35 更新：手机版 PWA 版
+
+当前运行版本：
+
+```text
+image-studio-pwa-v20
+```
+
+PWA 更新：
+
+- 补强 `manifest.webmanifest`：应用名称、短名称、描述、id、start_url、scope、standalone、display_override、portrait 方向、主题色、图标、快捷入口。
+- 首页增加 `viewport-fit=cover`，适配 iPhone 安全区域。
+- 增加 `mobile-web-app-capable` 和 Apple touch icon 配置。
+- Service Worker 改为缓存应用壳：`/`、`index.html`、CSS、JS、manifest、图标。
+- API 和图片输出仍保持实时请求，不缓存 `/api/` 和 `/outputs/`。
+- 移动端导航改为顶部横向滚动胶囊按钮。
+- 手机端隐藏左侧服务状态卡，减少占屏。
+- 手机端底部输入框适配安全区域，textarea 字号提高到 16px，避免 iOS 自动放大。
+- 设置 / 服务商弹窗在手机端仍为底部 sheet。
+- `/api/health` 返回 `image-studio-pwa-v20`。
+- manifest JSON 校验通过。
+- `npm run check` 通过。
+
+安装方式：
+
+- iPhone Safari：打开地址 → 分享 → 添加到主屏幕。
+- Android Chrome：打开地址 → 菜单 → 添加到主屏幕 / 安装应用。
+
+## 2026-04-28 16:17 更新：多图生成、弹窗视觉、图库标题和首页引导
 
 当前运行版本：
 

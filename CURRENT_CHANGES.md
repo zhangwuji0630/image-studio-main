@@ -5,7 +5,7 @@
 ## 当前运行版本
 
 ```text
-image-studio-layout-v19
+image-studio-pwa-v20
 ```
 
 本地地址：
@@ -23,7 +23,7 @@ GET http://127.0.0.1:5174/api/health
 当前返回版本应为：
 
 ```text
-image-studio-layout-v19
+image-studio-pwa-v20
 ```
 
 ## 当前文件位置
@@ -187,6 +187,28 @@ output/images/
 image-studio-layout-v15
 ```
 
+### v20：手机版 PWA 版
+
+本轮目标：让当前 Image Studio 更适合在手机浏览器中安装到主屏幕使用。
+
+已处理：
+
+- `manifest.webmanifest` 补强：应用名称、短名称、描述、id、start_url、scope、standalone、display_override、portrait 方向、主题色、图标、快捷入口。
+- `index.html` 增加 `viewport-fit=cover`，适配 iPhone 刘海屏 / 底部安全区域。
+- 增加 `mobile-web-app-capable`、Apple touch icon 配置。
+- `sw.js` 改为缓存应用壳：`/`、`index.html`、CSS、JS、manifest、图标。
+- `/api/` 和 `/outputs/` 不缓存，避免生成状态和图片结果过期。
+- 手机端导航改成顶部横向滚动胶囊按钮。
+- 手机端隐藏左侧服务状态卡，减少占屏。
+- 手机端底部输入框适配安全区域。
+- 手机 textarea 字号提高到 `16px`，避免 iOS 聚焦时自动放大页面。
+- 设置 / 服务商在手机端保持底部 sheet。
+
+手机安装：
+
+- iPhone Safari：打开地址 → 分享 → 添加到主屏幕。
+- Android Chrome：打开地址 → 菜单 → 添加到主屏幕 / 安装应用。
+
 ### v16：多图生成拆分请求
 
 问题：用户设置 4 张时，前端和后端确实发送了 `n:4`，但 `imgv1.aiapis.help + gpt-image-2` 单次请求实际只返回 1 张。
@@ -282,7 +304,7 @@ npm run check
 
 已验证：
 
-- `/api/health` 返回 `image-studio-layout-v19`。
+- `/api/health` 返回 `image-studio-pwa-v20`。
 - 默认进入页面显示“创作首页”，左侧导航包含“创作首页 / 生成图库 / 本地历史 / 收藏 / 服务商 / 设置”。
 - 首页默认显示“你想创作什么？”，并展示 6 个灵感卡片。
 - 文本框默认空。
