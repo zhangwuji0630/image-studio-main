@@ -89,6 +89,7 @@ function normalizeSize(value) { return String(value || "").trim().toLowerCase().
 function applyAspectPreset() { const size = aspectSizeMap[fields.aspectPreset.value]; if (size) fields.size.value = size; updateSummaries(); }
 function showView(name) {
   closeDrawers();
+  document.body.classList.toggle("view-create-active", name === "create");
   $$(".view").forEach((v) => v.classList.remove("active"));
   $(`#view-${name}`)?.classList.add("active");
   $$(".nav-item[data-view]").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
@@ -418,7 +419,7 @@ els.lightboxBackdrop.addEventListener("click", closeLightbox); els.lightboxClose
 els.lightboxReuse.addEventListener("click", () => { const image = activeLightboxList[activeLightboxIndex]; if (image) reusePrompt(image); closeLightbox(); });
 document.addEventListener("keydown", (e) => { if (!els.lightbox.hidden) { if (e.key === "Escape") closeLightbox(); if (e.key === "ArrowLeft") stepLightbox(-1); if (e.key === "ArrowRight") stepLightbox(1); return; } if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateImage(); if (e.key === "Escape") closeDrawers(); });
 
-loadConfig(); renderGallery(); checkServer(); loadGallery(); loadHistory(); setCreateState("empty");
+loadConfig(); document.body.classList.add("view-create-active"); renderGallery(); checkServer(); loadGallery(); loadHistory(); setCreateState("empty");
 document.documentElement.dataset.appReady = "true";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
