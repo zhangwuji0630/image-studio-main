@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Studio</title>
+    <meta name="theme-color" content="#f6f6f4" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Image Studio" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="icon" href="./icons/icon-192.png" />
+    <link rel="stylesheet" href="./styles.css?v=image-studio-layout-v19" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">✦</div>
+          <div>
+            <strong>Image Studio</strong>
+            <span>Creative Workspace</span>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item active" type="button" data-view="create"><span aria-hidden="true">✦</span>创作首页</button>
+          <button class="nav-item" type="button" data-view="gallery"><span aria-hidden="true">▦</span>生成图库</button>
+          <button class="nav-item" type="button" data-view="history"><span aria-hidden="true">◴</span>本地历史</button>
+          <button class="nav-item" type="button" data-view="favorites"><span aria-hidden="true">♡</span>收藏</button>
+          <button class="nav-item" type="button" data-drawer="provider"><span aria-hidden="true">◇</span>服务商</button>
+          <button class="nav-item" type="button" data-drawer="params"><span aria-hidden="true">⚙</span>设置</button>
+        </nav>
+
+        <section class="service-card" aria-label="本地服务状态">
+          <div class="service-card-head">
+            <div class="service-dot" id="serviceDot"></div>
+            <strong id="serverStatus">本地服务正常</strong>
+          </div>
+          <span id="serverSubStatus">http://localhost:5174</span>
+          <p>运行中 · 99% 可用</p>
+          <div class="service-meter"><span></span></div>
+        </section>
+      </aside>
+
+      <main class="main-shell">
+        <section class="view view-create active" id="view-create" aria-label="创作首页">
+          <div class="create-stage" id="createStage">
+            <section class="empty-state" id="emptyState">
+              <div class="empty-orb">✦</div>
+              <p class="eyebrow">Prompt Lab</p>
+              <h1>你想创作什么？</h1>
+              <p>从一个主体、场景或风格开始，把脑子里的画面先说出来。</p>
+              <div class="prompt-formula">
+                <span>提示词公式</span>
+                <strong>主体 + 场景 + 镜头 + 光线 + 风格 + 约束</strong>
+              </div>
+              <div class="inspiration-grid" aria-label="提示词灵感">
+                <button type="button" data-snippet="韩国女生，首尔街头，中景俯拍，傍晚街灯，电影感，真实摄影，超清细节。">
+                  <strong>街头人像</strong><span>首尔街头 · 傍晚电影感</span>
+                </button>
+                <button type="button" data-snippet="白色陶瓷杯放在木桌上，自然窗光，极简背景，商业摄影，高级留白，柔和阴影。">
+                  <strong>产品海报</strong><span>陶瓷杯 · 自然窗光</span>
+                </button>
+                <button type="button" data-snippet="窗边橘猫，柔和自然光，浅景深，写实摄影，温暖安静氛围，毛发细节清晰。">
+                  <strong>宠物写真</strong><span>窗边猫咪 · 温暖氛围</span>
+                </button>
+                <button type="button" data-snippet="雨夜城市街道，霓虹灯反射，湿润路面，电影感构图，浅景深，高级暗色调。">
+                  <strong>雨夜霓虹</strong><span>城市街道 · 霓虹反射</span>
+                </button>
+                <button type="button" data-snippet="人物半身头像，干净背景，柔和光线，主体居中，细节清晰，适合社交头像。">
+                  <strong>头像设计</strong><span>半身头像 · 干净背景</span>
+                </button>
+                <button type="button" data-snippet="黄昏卧室，窗帘透光，温暖色调，安静氛围，真实摄影，柔和阴影。">
+                  <strong>室内氛围</strong><span>黄昏卧室 · 温暖色调</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="generating-state" id="generatingState" hidden>
+              <div class="skeleton-card"></div>
+              <h2 id="progressLabel">正在生成图片…</h2>
+              <p id="progressStep">请求接口中</p>
+              <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+              <output id="progressElapsed">0s</output>
+            </section>
+
+            <section class="current-result" id="currentResult" hidden>
+              <div class="result-head">
+                <div>
+                  <p class="eyebrow">当前创作</p>
+                  <h1>本次生成结果</h1>
+                </div>
+                <span id="resultMeta">等待生成</span>
+              </div>
+              <div class="current-grid" id="currentGrid"></div>
+              <div class="current-actions">
+                <button class="ghost-button" type="button" id="reusePromptBtn">复用提示词</button>
+                <button class="ghost-button" type="button" id="downloadAllBtn" disabled>下载全部</button>
+              </div>
+            </section>
+
+            <section class="error-state" id="errorPanel" hidden>
+              <h2 id="errorTitle">生成失败</h2>
+              <p id="errorMessage">请检查接口配置后重试。</p>
+              <button class="dark-button" type="button" id="retryBtn">重试</button>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-gallery" aria-label="生成图库">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Gallery</p>
+              <h1>生成图库</h1>
+            </div>
+            <div class="filters">
+              <input id="gallerySearch" type="search" placeholder="搜索提示词、文件名或模型" />
+              <select id="galleryFilter" aria-label="图库筛选">
+                <option value="all" selected>全部图片</option>
+                <option value="favorite">仅收藏</option>
+              </select>
+            </div>
+          </div>
+          <div class="masonry" id="galleryGrid"></div>
+          <div class="blank-tip" id="galleryBlank">还没有历史图片。生成成功后会自动进入这里。</div>
+        </section>
+
+        <section class="view" id="view-history" aria-label="本地历史">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">History</p>
+              <h1>本地历史</h1>
+            </div>
+            <div class="history-actions"><button class="ghost-button" type="button" id="refreshHistoryBtn">刷新</button><button class="danger-button" type="button" id="clearHistoryBtn">清空全部</button></div>
+          </div>
+          <div class="history-list" id="historyList"></div>
+          <div class="blank-tip" id="historyBlank">还没有任务记录。</div>
+        </section>
+
+        <section class="view" id="view-favorites" aria-label="收藏">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">Favorites</p>
+              <h1>收藏</h1>
+            </div>
+          </div>
+          <div class="masonry" id="favoriteGrid"></div>
+          <div class="blank-tip" id="favoriteBlank">还没有收藏图片。</div>
+        </section>
+      </main>
+
+      <section class="composer" aria-label="提示词输入">
+        <div class="composer-main">
+          <textarea id="prompt" placeholder="写下你想生成的画面、风格、构图、光线、约束…"></textarea>
+          <button class="upload-card" type="button" id="addImageBtn">
+            <span>▧</span>
+            <strong>上传图片</strong>
+            <small id="uploadMeta">支持 JPG、PNG</small>
+          </button>
+        </div>
+        <div class="composer-bottom">
+          <div class="style-chips">
+            <button type="button" data-snippet="写实摄影风格，高质量照片，自然光，真实皮肤/材质纹理，浅景深，画面干净。">写实</button>
+            <button type="button" data-snippet="老照片风格，胶片颗粒，轻微褪色，年代感真实，构图像随手拍摄。">摄影</button>
+            <button type="button" data-snippet="柔和自然光，低饱和色彩，画面安静，高级留白。">自然光</button>
+            <button type="button" data-snippet="高清细节，主体清晰，材质真实，背景干净。">高清细节</button>
+            <button type="button" data-snippet="柔和色调，低对比，安静氛围，真实质感。">柔和色调</button>
+            <button type="button" class="add-style" id="addStyleBtn">＋ 添加风格</button>
+          </div>
+          <button class="params-link" type="button" data-drawer="params" id="bottomParamSummary">3:4 · high · png · 1张</button>
+          <button class="dark-button generate" type="button" id="generateBtn">生成 1 张</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+
+    <aside class="drawer" id="paramsDrawer" data-drawer-panel="params" aria-label="参数设置" aria-hidden="true">
+      <div class="drawer-head"><h2>生成参数</h2><button type="button" data-close-drawer>×</button></div>
+      <label>工作模式<select id="mode"><option value="generate" selected>文字生成</option><option value="edit">图片编辑</option></select></label>
+      <label>模型<input id="model" type="text" value="gpt-image-2" /></label>
+      <label>画幅比例<select id="aspectPreset"><option value="3:4" selected>3:4</option><option value="1:1">1:1</option><option value="3:2">3:2</option><option value="2:3">2:3</option><option value="custom">自定义</option></select></label>
+      <label>输出尺寸<input id="size" type="text" value="960x1280" /></label>
+      <small id="sizeHint">3:4 使用 960x1280。</small>
+      <label>质量<select id="quality"><option value="high" selected>high</option><option value="medium">medium</option><option value="low">low</option><option value="auto">auto</option></select></label>
+      <label>格式<select id="outputFormat"><option value="png" selected>png</option><option value="webp">webp</option><option value="jpeg">jpeg</option></select></label>
+      <label>数量<input id="count" type="number" min="1" max="4" value="1" /></label>
+      <label>返回<select id="responseFormat"><option value="b64_json" selected>b64_json</option><option value="url">url</option></select></label>
+      <label>常用排除项<input id="avoid" type="text" value="不要文字，不要水印，不要畸形手指，不要低清晰度，不要过度磨皮" /></label>
+      <button class="ghost-button full" type="button" id="clearPrompt">清空提示词</button>
+    </aside>
+
+    <aside class="drawer" id="providerDrawer" data-drawer-panel="provider" aria-label="服务商设置" aria-hidden="true">
+      <div class="drawer-head"><h2>服务商设置</h2><button type="button" data-close-drawer>×</button></div>
+      <label>生成 URL<input id="apiUrl" type="url" value="https://imgv1.aiapis.help" /></label>
+      <label>编辑 URL<input id="editApiUrl" type="url" value="https://imgv1.aiapis.help" /></label>
+      <label>API Key<input id="apiKey" type="password" autocomplete="new-password" placeholder="sk-…" /></label>
+      <label class="check-row"><input id="rememberKey" type="checkbox" /> <span>记住 Key（仅本机浏览器）</span></label>
+      <p class="drawer-note" id="keyStatus">Key 仅在提交请求时使用。</p>
+      <p class="drawer-note" id="configStatus">本地代理调用，不会把完整 Key 写入日志。</p>
+      <button class="ghost-button full" type="button" id="saveConfigBtn">保存配置</button>
+    </aside>
+
+    <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+
+    <div id="lightbox" class="lightbox" hidden>
+      <button class="lightbox-backdrop" type="button" id="lightboxBackdrop" aria-label="关闭预览"></button>
+      <section class="lightbox-panel" role="dialog" aria-modal="true">
+        <header>
+          <div><h2 id="lightboxTitle">图片预览</h2><p id="lightboxMeta">等待图片</p><p id="lightboxPrompt" class="lightbox-prompt"></p></div>
+          <button type="button" id="lightboxClose">×</button>
+        </header>
+        <button class="lightbox-nav prev" type="button" id="lightboxPrev">‹</button>
+        <img id="lightboxImage" alt="生成图片大图预览" />
+        <button class="lightbox-nav next" type="button" id="lightboxNext">›</button>
+        <footer>
+          <a id="lightboxOpen" href="#" target="_blank" rel="noreferrer">新窗口打开</a>
+          <a id="lightboxDownload" href="#" download>下载图片</a>
+          <button type="button" id="lightboxReuse">复用提示词</button>
+        </footer>
+      </section>
+    </div>
+
+    <script src="./app.js?v=image-studio-layout-v19" defer></script>
+  </body>
+</html>
