@@ -38,7 +38,7 @@ const manifestPath = path.join(outputRoot, "manifest.json");
 const historyPath = path.join(outputRoot, "history.json");
 const trashDir = path.join(outputRoot, ".trash");
 const port = Number(process.env.PORT || 5174);
-const appVersion = "image-studio-layout-v19";
+const appVersion = "image-studio-pwa-v20";
 const defaultImageApiBase = process.env.IMAGE_API_BASE || process.env.IMG_API_BASE || "https://imgv1.aiapis.help";
 let requestSeq = 0;
 

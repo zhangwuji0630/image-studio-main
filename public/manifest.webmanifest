@@ -1,14 +1,17 @@
 {
-  "name": "Image Studio",
+  "name": "Image Studio - AI 图片工作台",
   "short_name": "Image Studio",
-  "description": "本地 AI 图片生成与图库工作台",
+  "description": "手机可安装的本地 AI 图片生成、编辑和图库工作台。",
+  "id": "/?app=image-studio",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "portrait-primary",
-  "background_color": "#f7f7f5",
-  "theme_color": "#111111",
+  "background_color": "#f6f6f4",
+  "theme_color": "#f6f6f4",
   "categories": ["photo", "productivity", "utilities"],
+  "lang": "zh-CN",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -21,6 +24,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "开始创作",
+      "short_name": "创作",
+      "description": "打开创作首页",
+      "url": "/?source=pwa&view=create",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "生成图库",
+      "short_name": "图库",
+      "description": "查看本地生成图库",
+      "url": "/?source=pwa&view=gallery",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }
