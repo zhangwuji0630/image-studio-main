@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512.png" />
     <link rel="icon" href="./icons/icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=image-studio-pwa-v23" />
+    <link rel="stylesheet" href="./styles.css?v=image-studio-pwa-v27" />
   </head>
   <body>
     <div class="app-shell">
@@ -30,6 +30,7 @@
 
         <nav class="nav-list">
           <button class="nav-item active" type="button" data-view="create"><span aria-hidden="true">✦</span>创作首页</button>
+          <button class="nav-item" type="button" data-view="prompt-flow"><span aria-hidden="true">⌘</span>提示词助手</button>
           <button class="nav-item" type="button" data-view="gallery"><span aria-hidden="true">▦</span>生成图库</button>
           <button class="nav-item" type="button" data-view="history"><span aria-hidden="true">◴</span>本地历史</button>
           <button class="nav-item" type="button" data-view="favorites"><span aria-hidden="true">♡</span>收藏</button>
@@ -99,6 +100,113 @@
               <p id="errorMessage">请检查接口配置后重试。</p>
               <button class="dark-button" type="button" id="retryBtn">重试</button>
             </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-prompt-flow" aria-label="提示词助手">
+          <div class="page-head assistant-page-head">
+            <div>
+              <p class="eyebrow">Prompt Assistant</p>
+              <h1>提示词助手</h1>
+              <p class="assistant-page-subtitle">按生图流程选内容，右侧实时生成提示词，再填入底部输入框。</p>
+            </div>
+            <button class="ghost-button" type="button" id="promptFlowResetTop">重置</button>
+          </div>
+
+          <div class="assistant-page-layout" id="promptAssistant">
+            <aside class="assistant-section-nav" aria-label="提示词助手分组">
+              <button class="assistant-section-tab active" type="button" data-assistant-section="foundation">画面基础</button>
+              <button class="assistant-section-tab" type="button" data-assistant-section="scene">场景构图</button>
+              <button class="assistant-section-tab" type="button" data-assistant-section="camera">摄影质感</button>
+              <button class="assistant-section-tab" type="button" data-assistant-section="output">输出控制</button>
+            </aside>
+
+            <div class="assistant-page-steps">
+              <section class="assistant-section-panel active" data-assistant-panel="foundation">
+                <section class="assistant-step">
+                  <h3>1 类型</h3>
+                  <div class="assistant-options" data-flow-group="type" data-flow-mode="single"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>2 用途</h3>
+                  <div class="assistant-options" data-flow-group="usage" data-flow-mode="single"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>3 主体</h3>
+                  <input id="promptFlowSubject" type="text" placeholder="比如：一杯瑞幸咖啡" />
+                </section>
+
+                <section class="assistant-step">
+                  <h3>4 主体状态</h3>
+                  <div class="assistant-options" data-flow-group="pose" data-flow-mode="multi"></div>
+                </section>
+              </section>
+
+              <section class="assistant-section-panel" data-assistant-panel="scene">
+                <section class="assistant-step">
+                  <h3>5 场景</h3>
+                  <div class="assistant-options" data-flow-group="scene" data-flow-mode="multi"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>6 构图 / 版式</h3>
+                  <div class="assistant-options" data-flow-group="composition" data-flow-mode="multi"></div>
+                </section>
+              </section>
+
+              <section class="assistant-section-panel" data-assistant-panel="camera">
+                <section class="assistant-step">
+                  <h3>7 镜头</h3>
+                  <div class="assistant-options" data-flow-group="lens" data-flow-mode="single"></div>
+                  <div class="assistant-options" data-flow-group="aperture" data-flow-mode="single"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>8 光线</h3>
+                  <div class="assistant-options" data-flow-group="lighting" data-flow-mode="multi"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>9 氛围</h3>
+                  <div class="assistant-options" data-flow-group="mood" data-flow-mode="multi"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>10 相机 / 滤镜</h3>
+                  <div class="assistant-options" data-flow-group="filter" data-flow-mode="single"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>11 材质质感</h3>
+                  <div class="assistant-options" data-flow-group="material" data-flow-mode="multi"></div>
+                </section>
+              </section>
+
+              <section class="assistant-section-panel" data-assistant-panel="output">
+                <section class="assistant-step">
+                  <h3>12 细节</h3>
+                  <div class="assistant-options" data-flow-group="detail" data-flow-mode="multi"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>13 负面词</h3>
+                  <div class="assistant-options" data-flow-group="negative" data-flow-mode="multi"></div>
+                </section>
+              </section>
+            </div>
+
+            <div class="assistant-page-preview-column">
+              <section class="assistant-preview sticky-preview">
+                <strong>生成提示词预览</strong>
+                <textarea id="promptFlowPreview" readonly placeholder="选择上面的内容后，这里会生成提示词"></textarea>
+                <div class="assistant-actions">
+                  <button class="assistant-apply" type="button" id="promptFlowApply">填入输入框</button>
+                  <button class="assistant-append" type="button" id="promptFlowAppend">追加</button>
+                </div>
+              </section>
+            </div>
           </div>
         </section>
 
@@ -224,6 +332,6 @@
       </section>
     </div>
 
-    <script src="./app.js?v=image-studio-pwa-v23" defer></script>
+    <script src="./app.js?v=image-studio-pwa-v27" defer></script>
   </body>
 </html>

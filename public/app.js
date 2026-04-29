@@ -11,6 +11,37 @@ const aspectSizeMap = {
   "2:3": "1024x1536",
 };
 const imgv1SupportedSizes = new Set(Object.values(aspectSizeMap));
+const promptFlowOptions = {
+  type: ["人像写真", "产品摄影", "食物饮品", "宠物写真", "海报设计"],
+  usage: ["电商主图", "小红书封面", "品牌海报", "杂志封面", "头像", "朋友圈氛围图", "详情页配图", "广告大片"],
+  pose: ["自然站姿", "坐姿", "行走中", "回头看镜头", "手拿道具", "直立摆放", "悬浮展示", "倾斜摆放", "使用中", "水珠附着", "热气腾腾", "手持展示"],
+  scene: ["纯色背景", "摄影棚", "木桌静物", "咖啡店", "街头", "海边", "卧室", "夜景霓虹", "极简空间"],
+  composition: ["特写", "中景", "全身", "俯拍", "平视", "低机位", "居中构图", "留白构图", "顶部留白", "左侧留白", "右侧留白", "适合放标题文字"],
+  lens: ["24mm 广角", "35mm 纪实", "50mm 标准", "85mm 人像", "100mm 微距"],
+  aperture: ["f/1.8 浅景深", "f/2.8 商业摄影", "f/5.6 清晰主体", "f/8 全画面清晰"],
+  lighting: ["自然窗光", "柔和散射光", "影棚布光", "逆光", "边缘光", "黄昏暖光", "夜景霓虹", "高级暗调光影"],
+  mood: ["清新自然", "高级冷淡", "温暖治愈", "电影感", "复古怀旧", "奢华精致", "活泼明亮", "安静松弛", "神秘暗调"],
+  filter: ["富士胶片风格", "富士 Classic Chrome", "富士 Eterna", "索尼清晰数码风格", "佳能暖色人像", "徕卡街拍风格", "Kodak Portra 400", "Cinestill 800T"],
+  material: ["玻璃通透", "金属反光", "陶瓷温润", "木质纹理", "皮革质感", "布料纹理", "液体光泽", "水珠细节", "磨砂质感", "高级哑光"],
+  detail: ["高清细节", "真实材质", "干净背景", "高级留白", "商业摄影质感", "真实阴影", "皮肤纹理自然", "玻璃/金属/液体质感"],
+  negative: ["不要文字", "不要水印", "不要低清晰度", "不要畸形手指", "不要多余肢体", "不要过度磨皮", "不要脏乱背景"]
+};
+const promptFlowState = {
+  type: "",
+  usage: "",
+  subject: "",
+  pose: [],
+  scene: [],
+  composition: [],
+  lens: "",
+  aperture: "",
+  lighting: [],
+  mood: [],
+  filter: "",
+  material: [],
+  detail: [],
+  negative: []
+};
 
 const fields = {
   apiUrl: $("#apiUrl"), editApiUrl: $("#editApiUrl"), apiKey: $("#apiKey"), rememberKey: $("#rememberKey"),
@@ -28,7 +59,8 @@ const els = {
   favoriteGrid: $("#favoriteGrid"), favoriteBlank: $("#favoriteBlank"), historyList: $("#historyList"), historyBlank: $("#historyBlank"), refreshHistoryBtn: $("#refreshHistoryBtn"), clearHistoryBtn: $("#clearHistoryBtn"),
   downloadAllBtn: $("#downloadAllBtn"), reusePromptBtn: $("#reusePromptBtn"), keyStatus: $("#keyStatus"), configStatus: $("#configStatus"), sizeHint: $("#sizeHint"),
   lightbox: $("#lightbox"), lightboxBackdrop: $("#lightboxBackdrop"), lightboxClose: $("#lightboxClose"), lightboxImage: $("#lightboxImage"), lightboxTitle: $("#lightboxTitle"), lightboxMeta: $("#lightboxMeta"), lightboxPrompt: $("#lightboxPrompt"), lightboxOpen: $("#lightboxOpen"), lightboxDownload: $("#lightboxDownload"), lightboxReuse: $("#lightboxReuse"), lightboxPrev: $("#lightboxPrev"), lightboxNext: $("#lightboxNext"),
-  mobileMenuBtn: $("#mobileMenuBtn"), composerPlusBtn: $("#composerPlusBtn"), composerExtraPanel: $("#composerExtraPanel"), sidebar: $("#appSidebar")
+  mobileMenuBtn: $("#mobileMenuBtn"), composerPlusBtn: $("#composerPlusBtn"), composerExtraPanel: $("#composerExtraPanel"), sidebar: $("#appSidebar"),
+  promptAssistant: $("#promptAssistant"), promptFlowReset: $("#promptFlowResetTop"), promptFlowSubject: $("#promptFlowSubject"), promptFlowPreview: $("#promptFlowPreview"), promptFlowApply: $("#promptFlowApply"), promptFlowAppend: $("#promptFlowAppend")
 };
 
 let galleryImages = [];
@@ -72,6 +104,79 @@ function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+function buildPromptFlowText() {
+  const parts = [];
+  if (promptFlowState.subject) parts.push(promptFlowState.subject);
+  if (promptFlowState.type) parts.push(promptFlowState.type);
+  if (promptFlowState.usage) parts.push(`用途：${promptFlowState.usage}`);
+  if (promptFlowState.pose.length) parts.push(`主体状态：${promptFlowState.pose.join("、")}`);
+  if (promptFlowState.scene.length) parts.push(`场景：${promptFlowState.scene.join("、")}`);
+  if (promptFlowState.composition.length) parts.push(`构图与视角：${promptFlowState.composition.join("、")}`);
+  if (promptFlowState.lens || promptFlowState.aperture) parts.push([promptFlowState.lens, promptFlowState.aperture].filter(Boolean).join("，"));
+  if (promptFlowState.lighting.length) parts.push(`光线：${promptFlowState.lighting.join("、")}`);
+  if (promptFlowState.mood.length) parts.push(`氛围：${promptFlowState.mood.join("、")}`);
+  if (promptFlowState.filter) parts.push(`风格：${promptFlowState.filter}`);
+  if (promptFlowState.material.length) parts.push(`材质质感：${promptFlowState.material.join("、")}`);
+  if (promptFlowState.detail.length) parts.push(`细节：${promptFlowState.detail.join("、")}`);
+  const promptText = parts.join("，");
+  const negativeText = promptFlowState.negative.length ? `\n约束：${promptFlowState.negative.join("，")}` : "";
+  return `${promptText}${negativeText}`.trim();
+}
+function updatePromptFlowPreview() {
+  if (!els.promptFlowPreview) return;
+  els.promptFlowPreview.value = buildPromptFlowText();
+}
+function renderPromptFlowGroup(group) {
+  const wrap = document.querySelector(`[data-flow-group="${group}"]`);
+  if (!wrap) return;
+  const mode = wrap.dataset.flowMode || "multi";
+  wrap.innerHTML = "";
+  for (const item of promptFlowOptions[group] || []) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = item;
+    const active = Array.isArray(promptFlowState[group]) ? promptFlowState[group].includes(item) : promptFlowState[group] === item;
+    btn.classList.toggle("active", active);
+    btn.addEventListener("click", () => {
+      if (mode === "single") {
+        promptFlowState[group] = promptFlowState[group] === item ? "" : item;
+      } else {
+        const list = Array.isArray(promptFlowState[group]) ? [...promptFlowState[group]] : [];
+        promptFlowState[group] = list.includes(item) ? list.filter((v) => v !== item) : [...list, item];
+      }
+      renderPromptFlowGroup(group);
+      updatePromptFlowPreview();
+    });
+    wrap.append(btn);
+  }
+}
+function renderPromptFlow() {
+  Object.keys(promptFlowOptions).forEach(renderPromptFlowGroup);
+  if (els.promptFlowSubject) els.promptFlowSubject.value = promptFlowState.subject || "";
+  updatePromptFlowPreview();
+}
+function resetPromptFlow() {
+  promptFlowState.type = "";
+  promptFlowState.usage = "";
+  promptFlowState.subject = "";
+  promptFlowState.pose = [];
+  promptFlowState.scene = [];
+  promptFlowState.composition = [];
+  promptFlowState.lens = "";
+  promptFlowState.aperture = "";
+  promptFlowState.lighting = [];
+  promptFlowState.mood = [];
+  promptFlowState.filter = "";
+  promptFlowState.material = [];
+  promptFlowState.detail = [];
+  promptFlowState.negative = [];
+  renderPromptFlow();
+}
+function setAssistantSection(section) {
+  const target = section || "foundation";
+  $$(".assistant-section-tab").forEach((btn) => btn.classList.toggle("active", btn.dataset.assistantSection === target));
+  $$(".assistant-section-panel").forEach((panel) => panel.classList.toggle("active", panel.dataset.assistantPanel === target));
 }
 function timeText(value) {
   if (!value) return "刚刚";
@@ -138,6 +243,7 @@ function showView(name) {
   closeDrawers();
   setMobileMenuOpen(false);
   document.body.classList.toggle("view-create-active", name === "create");
+  document.body.classList.toggle("view-prompt-flow-active", name === "prompt-flow");
   $$(".view").forEach((v) => v.classList.remove("active"));
   $(`#view-${name}`)?.classList.add("active");
   $$(".nav-item[data-view]").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
@@ -455,6 +561,11 @@ $$("[data-close-drawer]").forEach((b) => b.addEventListener("click", closeDrawer
 els.drawerBackdrop?.addEventListener("click", () => { closeDrawers(); setMobileMenuOpen(false); setComposerExtrasOpen(false); });
 $$("[data-snippet]").forEach((b) => b.addEventListener("click", () => appendPromptSnippet(b.dataset.snippet)));
 els.addStyleBtn?.addEventListener("click", addCustomStyle);
+els.promptFlowReset?.addEventListener("click", resetPromptFlow);
+$$(".assistant-section-tab").forEach((btn) => btn.addEventListener("click", () => setAssistantSection(btn.dataset.assistantSection)));
+els.promptFlowSubject?.addEventListener("input", () => { promptFlowState.subject = els.promptFlowSubject.value.trim(); updatePromptFlowPreview(); });
+els.promptFlowApply?.addEventListener("click", () => { const text = buildPromptFlowText(); if (!text) return; fields.prompt.value = text; fields.prompt.focus(); });
+els.promptFlowAppend?.addEventListener("click", () => { const text = buildPromptFlowText(); if (!text) return; fields.prompt.value = [fields.prompt.value.trim(), text].filter(Boolean).join("\n"); fields.prompt.focus(); });
 els.mobileMenuBtn?.addEventListener("click", () => setMobileMenuOpen(!document.body.classList.contains("mobile-sidebar-open")));
 els.composerPlusBtn?.addEventListener("click", () => toggleComposerExtras());
 Object.values(fields).forEach((el) => el?.addEventListener("input", updateSummaries));
@@ -496,7 +607,7 @@ window.addEventListener("resize", () => {
   }
 });
 
-loadConfig(); document.body.classList.add("view-create-active"); renderGallery(); checkServer(); loadGallery(); loadHistory(); setCreateState("empty");
+loadConfig(); document.body.classList.add("view-create-active"); document.body.classList.remove("view-prompt-flow-active"); renderPromptFlow(); setAssistantSection("foundation"); renderGallery(); checkServer(); loadGallery(); loadHistory(); setCreateState("empty");
 document.documentElement.dataset.appReady = "true";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
