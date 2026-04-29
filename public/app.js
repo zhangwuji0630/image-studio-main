@@ -21,13 +21,14 @@ const fields = {
 const els = {
   serverStatus: $("#serverStatus"), serverSubStatus: $("#serverSubStatus"), serviceDot: $("#serviceDot"),
   bottomParamSummary: $("#bottomParamSummary"), drawerBackdrop: $("#drawerBackdrop"), addStyleBtn: $("#addStyleBtn"),
-  generateBtn: $("#generateBtn"), saveConfigBtn: $("#saveConfigBtn"), clearPrompt: $("#clearPrompt"), addImageBtn: $("#addImageBtn"), imageInput: $("#imageInput"), uploadMeta: $("#uploadMeta"),
+  generateBtn: $("#generateBtn"), saveConfigBtn: $("#saveConfigBtn"), clearPrompt: $("#clearPrompt"), addImageBtn: $("#addImageBtn"), mobileAddImageBtn: $("#mobileAddImageBtn"), imageInput: $("#imageInput"), uploadMeta: $("#uploadMeta"), mobileUploadMeta: $("#mobileUploadMeta"),
   emptyState: $("#emptyState"), generatingState: $("#generatingState"), currentResult: $("#currentResult"), currentGrid: $("#currentGrid"), resultMeta: $("#resultMeta"), errorPanel: $("#errorPanel"), errorMessage: $("#errorMessage"), retryBtn: $("#retryBtn"),
   progressLabel: $("#progressLabel"), progressStep: $("#progressStep"), progressElapsed: $("#progressElapsed"), progressBar: $("#progressBar"),
   galleryGrid: $("#galleryGrid"), galleryBlank: $("#galleryBlank"), gallerySearch: $("#gallerySearch"), galleryFilter: $("#galleryFilter"),
   favoriteGrid: $("#favoriteGrid"), favoriteBlank: $("#favoriteBlank"), historyList: $("#historyList"), historyBlank: $("#historyBlank"), refreshHistoryBtn: $("#refreshHistoryBtn"), clearHistoryBtn: $("#clearHistoryBtn"),
   downloadAllBtn: $("#downloadAllBtn"), reusePromptBtn: $("#reusePromptBtn"), keyStatus: $("#keyStatus"), configStatus: $("#configStatus"), sizeHint: $("#sizeHint"),
-  lightbox: $("#lightbox"), lightboxBackdrop: $("#lightboxBackdrop"), lightboxClose: $("#lightboxClose"), lightboxImage: $("#lightboxImage"), lightboxTitle: $("#lightboxTitle"), lightboxMeta: $("#lightboxMeta"), lightboxPrompt: $("#lightboxPrompt"), lightboxOpen: $("#lightboxOpen"), lightboxDownload: $("#lightboxDownload"), lightboxReuse: $("#lightboxReuse"), lightboxPrev: $("#lightboxPrev"), lightboxNext: $("#lightboxNext")
+  lightbox: $("#lightbox"), lightboxBackdrop: $("#lightboxBackdrop"), lightboxClose: $("#lightboxClose"), lightboxImage: $("#lightboxImage"), lightboxTitle: $("#lightboxTitle"), lightboxMeta: $("#lightboxMeta"), lightboxPrompt: $("#lightboxPrompt"), lightboxOpen: $("#lightboxOpen"), lightboxDownload: $("#lightboxDownload"), lightboxReuse: $("#lightboxReuse"), lightboxPrev: $("#lightboxPrev"), lightboxNext: $("#lightboxNext"),
+  mobileMenuBtn: $("#mobileMenuBtn"), composerPlusBtn: $("#composerPlusBtn"), composerExtraPanel: $("#composerExtraPanel"), sidebar: $("#appSidebar")
 };
 
 let galleryImages = [];
@@ -40,6 +41,31 @@ let progressTimer = null;
 let progressStartedAt = 0;
 let activeLightboxList = [];
 let activeLightboxIndex = 0;
+let isMobileExtrasOpen = false;
+let createState = "empty";
+
+function isMobileViewport() {
+  return window.matchMedia("(max-width: 768px)").matches;
+}
+function setMobileMenuOpen(open) {
+  if (!els.sidebar || !els.mobileMenuBtn) return;
+  if (open && !isMobileViewport()) return;
+  document.body.classList.toggle("mobile-sidebar-open", open);
+  els.sidebar.classList.toggle("mobile-open", open);
+  els.mobileMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+function setComposerExtrasOpen(open) {
+  if (!els.composerExtraPanel || !els.composerPlusBtn) return;
+  if (open && !isMobileViewport()) return;
+  isMobileExtrasOpen = open;
+  els.composerExtraPanel.classList.toggle("open", open);
+  els.composerPlusBtn.classList.toggle("active", open);
+  els.composerPlusBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+function toggleComposerExtras(force) {
+  const next = typeof force === "boolean" ? force : !isMobileExtrasOpen;
+  setComposerExtrasOpen(next);
+}
 
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes)) return "-";
@@ -72,10 +98,31 @@ function maskSecret(value) {
   if (secret.length <= 8) return "已填写（已隐藏）";
   return `${secret.slice(0, 3)}…${secret.slice(-4)}`;
 }
+function normalizePromptText(value) {
+  return String(value || "").replace(/\r\n/g, "\n").replace(/[ \t]+$/gm, "").trim();
+}
+function stripAvoidFromPrompt(prompt, avoid) {
+  let text = normalizePromptText(prompt);
+  const avoidText = normalizePromptText(avoid);
+  if (!avoidText) return text;
+  const escaped = avoidText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  text = text.replace(new RegExp(`(?:\\n|\\s)*约束[:：]\\s*${escaped}\\s*$`, "u"), "");
+  return normalizePromptText(text);
+}
 function buildPrompt() {
-  const prompt = fields.prompt.value.trim();
-  const avoid = fields.avoid.value.trim();
-  return avoid ? `${prompt}\n约束：${avoid}` : prompt;
+  const avoid = normalizePromptText(fields.avoid.value);
+  const prompt = stripAvoidFromPrompt(fields.prompt.value, avoid);
+  return avoid ? `${prompt}\n约束：${avoid}`.trim() : prompt;
+}
+function friendlyErrorMessage(error) {
+  const text = String(error?.message || error || "");
+  if (/stream disconnected before completion|socket hang up|ECONNRESET|terminated|aborted/i.test(text)) {
+    return "上游图片生成中途断流了，请重试一次；如果连续失败，可以先改成 1:1 / medium，或稍后再试。";
+  }
+  if (/timeout|请求超时|timed out/i.test(text)) {
+    return "上游生成超时了，请重试；如果提示词或尺寸较重，建议先用 1:1 / medium 出草稿。";
+  }
+  return text || "生成失败，请稍后重试。";
 }
 function updateSummaries() {
   const count = Math.max(1, Math.min(4, Number(fields.count.value || 1)));
@@ -89,15 +136,18 @@ function normalizeSize(value) { return String(value || "").trim().toLowerCase().
 function applyAspectPreset() { const size = aspectSizeMap[fields.aspectPreset.value]; if (size) fields.size.value = size; updateSummaries(); }
 function showView(name) {
   closeDrawers();
+  setMobileMenuOpen(false);
   document.body.classList.toggle("view-create-active", name === "create");
   $$(".view").forEach((v) => v.classList.remove("active"));
   $(`#view-${name}`)?.classList.add("active");
   $$(".nav-item[data-view]").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
+  if (name === "create") setCreateState(isGenerating ? "generating" : createState);
   if (name === "gallery") renderGallery();
   if (name === "favorites") renderFavorites();
   if (name === "history") renderHistory();
 }
 function openDrawer(name) {
+  setMobileMenuOpen(false);
   const drawer = name === "provider" ? $("#providerDrawer") : $("#paramsDrawer");
   if (!drawer) return;
   $$(".drawer").forEach((d) => {
@@ -118,6 +168,7 @@ function appendPromptSnippet(snippet) {
   if (!text) return;
   fields.prompt.value = `${fields.prompt.value.trim()}\n${text}`.trim();
   fields.prompt.focus();
+  if (isMobileViewport()) setComposerExtrasOpen(false);
 }
 function addCustomStyle() {
   const text = prompt("输入要添加的风格词：", "");
@@ -133,6 +184,7 @@ function addCustomStyle() {
   appendPromptSnippet(snippet);
 }
 function setCreateState(state) {
+  createState = state;
   els.emptyState.hidden = state !== "empty";
   els.generatingState.hidden = state !== "generating";
   els.currentResult.hidden = state !== "done";
@@ -143,6 +195,7 @@ function setGenerateState(loading) {
   els.generateBtn.disabled = loading;
   els.saveConfigBtn.disabled = loading;
   els.addImageBtn.disabled = loading;
+  if (els.mobileAddImageBtn) els.mobileAddImageBtn.disabled = loading;
   updateSummaries();
 }
 function startProgress() {
@@ -204,7 +257,9 @@ async function selectSourceImage(file) {
   if (file.size > 50 * 1024 * 1024) return alert("参考图片不能超过 50MB。 ");
   selectedImage = await fileToSourceImage(file);
   fields.mode.value = "edit";
-  els.uploadMeta.textContent = `${selectedImage.name} · ${formatBytes(selectedImage.size)}`;
+  const uploadText = `${selectedImage.name} · ${formatBytes(selectedImage.size)}`;
+  if (els.uploadMeta) els.uploadMeta.textContent = uploadText;
+  if (els.mobileUploadMeta) els.mobileUploadMeta.textContent = uploadText;
   updateSummaries();
 }
 function validatePayload(payload) {
@@ -347,7 +402,7 @@ async function generateImage() {
     await Promise.all([loadGallery(), loadHistory()]);
     saveConfig(true);
   } catch (err) {
-    finishProgress(false); els.errorMessage.textContent = err.message || "生成失败，请稍后重试。"; setCreateState("error");
+    finishProgress(false); els.errorMessage.textContent = friendlyErrorMessage(err); setCreateState("error");
   } finally { setGenerateState(false); }
 }
 function downloadImage(image) { const a = document.createElement("a"); a.href = image.url; a.download = image.filename || "image.png"; document.body.append(a); a.click(); a.remove(); }
@@ -397,15 +452,18 @@ function stepLightbox(delta) { if (!activeLightboxList.length) return; activeLig
 $$(".nav-item[data-view]").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
 $$("[data-drawer]").forEach((b) => b.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); openDrawer(b.dataset.drawer); }));
 $$("[data-close-drawer]").forEach((b) => b.addEventListener("click", closeDrawers));
-els.drawerBackdrop?.addEventListener("click", closeDrawers);
+els.drawerBackdrop?.addEventListener("click", () => { closeDrawers(); setMobileMenuOpen(false); setComposerExtrasOpen(false); });
 $$("[data-snippet]").forEach((b) => b.addEventListener("click", () => appendPromptSnippet(b.dataset.snippet)));
 els.addStyleBtn?.addEventListener("click", addCustomStyle);
+els.mobileMenuBtn?.addEventListener("click", () => setMobileMenuOpen(!document.body.classList.contains("mobile-sidebar-open")));
+els.composerPlusBtn?.addEventListener("click", () => toggleComposerExtras());
 Object.values(fields).forEach((el) => el?.addEventListener("input", updateSummaries));
 fields.aspectPreset.addEventListener("change", applyAspectPreset);
 fields.rememberKey.addEventListener("change", updateSummaries);
 els.saveConfigBtn.addEventListener("click", () => saveConfig(false));
 els.clearPrompt.addEventListener("click", () => { fields.prompt.value = ""; fields.prompt.focus(); });
 els.addImageBtn.addEventListener("click", () => els.imageInput.click());
+els.mobileAddImageBtn?.addEventListener("click", () => els.imageInput.click());
 els.imageInput.addEventListener("change", () => selectSourceImage(els.imageInput.files?.[0]));
 els.generateBtn.addEventListener("click", generateImage);
 els.retryBtn.addEventListener("click", generateImage);
@@ -417,7 +475,26 @@ els.refreshHistoryBtn.addEventListener("click", loadHistory);
 els.clearHistoryBtn?.addEventListener("click", clearHistory);
 els.lightboxBackdrop.addEventListener("click", closeLightbox); els.lightboxClose.addEventListener("click", closeLightbox); els.lightboxPrev.addEventListener("click", () => stepLightbox(-1)); els.lightboxNext.addEventListener("click", () => stepLightbox(1));
 els.lightboxReuse.addEventListener("click", () => { const image = activeLightboxList[activeLightboxIndex]; if (image) reusePrompt(image); closeLightbox(); });
-document.addEventListener("keydown", (e) => { if (!els.lightbox.hidden) { if (e.key === "Escape") closeLightbox(); if (e.key === "ArrowLeft") stepLightbox(-1); if (e.key === "ArrowRight") stepLightbox(1); return; } if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateImage(); if (e.key === "Escape") closeDrawers(); });
+document.addEventListener("keydown", (e) => {
+  if (!els.lightbox.hidden) {
+    if (e.key === "Escape") closeLightbox();
+    if (e.key === "ArrowLeft") stepLightbox(-1);
+    if (e.key === "ArrowRight") stepLightbox(1);
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") generateImage();
+  if (e.key === "Escape") {
+    closeDrawers();
+    setMobileMenuOpen(false);
+    setComposerExtrasOpen(false);
+  }
+});
+window.addEventListener("resize", () => {
+  if (!isMobileViewport()) {
+    setMobileMenuOpen(false);
+    setComposerExtrasOpen(false);
+  }
+});
 
 loadConfig(); document.body.classList.add("view-create-active"); renderGallery(); checkServer(); loadGallery(); loadHistory(); setCreateState("empty");
 document.documentElement.dataset.appReady = "true";

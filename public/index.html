@@ -13,11 +13,13 @@
     <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512.png" />
     <link rel="icon" href="./icons/icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=image-studio-pwa-v22" />
+    <link rel="stylesheet" href="./styles.css?v=image-studio-pwa-v23" />
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar" aria-label="主导航">
+      <button class="mobile-menu-button" type="button" id="mobileMenuBtn" aria-label="打开功能菜单" aria-controls="appSidebar" aria-expanded="false">☰</button>
+
+      <aside class="sidebar" id="appSidebar" aria-label="主导航">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">✦</div>
           <div>
@@ -144,6 +146,7 @@
 
       <section class="composer" aria-label="提示词输入">
         <div class="composer-main">
+          <button class="composer-plus" type="button" id="composerPlusBtn" aria-label="展开更多输入功能" aria-controls="composerExtraPanel" aria-expanded="false">＋</button>
           <textarea id="prompt" placeholder="写下你想生成的画面、风格、构图、光线、约束…"></textarea>
           <button class="upload-card" type="button" id="addImageBtn">
             <span>▧</span>
@@ -151,17 +154,24 @@
             <small id="uploadMeta">支持 JPG、PNG</small>
           </button>
         </div>
-        <div class="composer-bottom">
-          <div class="style-chips">
-            <button type="button" data-snippet="写实摄影风格，高质量照片，自然光，真实皮肤/材质纹理，浅景深，画面干净。">写实</button>
-            <button type="button" data-snippet="老照片风格，胶片颗粒，轻微褪色，年代感真实，构图像随手拍摄。">摄影</button>
-            <button type="button" data-snippet="柔和自然光，低饱和色彩，画面安静，高级留白。">自然光</button>
-            <button type="button" data-snippet="高清细节，主体清晰，材质真实，背景干净。">高清细节</button>
-            <button type="button" data-snippet="柔和色调，低对比，安静氛围，真实质感。">柔和色调</button>
-            <button type="button" class="add-style" id="addStyleBtn">＋ 添加风格</button>
+        <div class="composer-extra-panel" id="composerExtraPanel">
+          <div class="composer-bottom">
+            <button class="upload-card mobile-upload-card" type="button" id="mobileAddImageBtn">
+              <span>▧</span>
+              <strong>上传图片</strong>
+              <small id="mobileUploadMeta">支持 JPG、PNG</small>
+            </button>
+            <div class="style-chips">
+              <button type="button" data-snippet="写实摄影风格，高质量照片，自然光，真实皮肤/材质纹理，浅景深，画面干净。">写实</button>
+              <button type="button" data-snippet="老照片风格，胶片颗粒，轻微褪色，年代感真实，构图像随手拍摄。">摄影</button>
+              <button type="button" data-snippet="柔和自然光，低饱和色彩，画面安静，高级留白。">自然光</button>
+              <button type="button" data-snippet="高清细节，主体清晰，材质真实，背景干净。">高清细节</button>
+              <button type="button" data-snippet="柔和色调，低对比，安静氛围，真实质感。">柔和色调</button>
+              <button type="button" class="add-style" id="addStyleBtn">＋ 添加风格</button>
+            </div>
+            <button class="params-link" type="button" data-drawer="params" id="bottomParamSummary">3:4 · high · png · 1张</button>
+            <button class="dark-button generate" type="button" id="generateBtn">生成 1 张</button>
           </div>
-          <button class="params-link" type="button" data-drawer="params" id="bottomParamSummary">3:4 · high · png · 1张</button>
-          <button class="dark-button generate" type="button" id="generateBtn">生成 1 张</button>
         </div>
       </section>
     </div>
@@ -214,6 +224,6 @@
       </section>
     </div>
 
-    <script src="./app.js?v=image-studio-pwa-v22" defer></script>
+    <script src="./app.js?v=image-studio-pwa-v23" defer></script>
   </body>
 </html>

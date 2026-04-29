@@ -228,3 +228,24 @@ image-studio-layout-v19
 - `npm run check` 通过。
 - `/api/models` 可获取 `gpt-image-2`。
 - `/api/generate` 已通过本地页面同源代理真实生成图片并保存到 `output/images/`。
+
+## 2026-04-29 11:10 更新：网页端界面修复与生成状态保持
+
+当前运行版本：
+
+```text
+image-studio-pwa-v23
+```
+
+主要更新：
+
+- 修复桌面端 composer 被手机端改版误伤的问题，恢复桌面端完整输入区布局。
+- 手机端继续保留 `+` 底部弹层，并补回上传图片入口。
+- 修复生成中切到其他页面再回创作首页时看不到生成中状态的问题。
+- 统一升级 CSS / JS 查询参数、Service Worker 缓存名、后端 appVersion 到 `image-studio-pwa-v23`。
+- 调整上游超时策略为更适合慢速图片通道的 `240s x 2 次`。
+
+验证：
+
+- `npm run check` 通过。
+- 已用浏览器自动化验证桌面端、手机端、生成中切页恢复状态。

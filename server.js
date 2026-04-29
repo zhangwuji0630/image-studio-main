@@ -38,7 +38,7 @@ const manifestPath = path.join(outputRoot, "manifest.json");
 const historyPath = path.join(outputRoot, "history.json");
 const trashDir = path.join(outputRoot, ".trash");
 const port = Number(process.env.PORT || 5174);
-const appVersion = "image-studio-pwa-v22";
+const appVersion = "image-studio-pwa-v23";
 const defaultImageApiBase = process.env.IMAGE_API_BASE || process.env.IMG_API_BASE || "https://imgv1.aiapis.help";
 let requestSeq = 0;
 
@@ -127,6 +127,12 @@ function explainUpstreamError(message, request = {}) {
       "不要使用带省略号的显示版 Key，也不要多复制空格或换行。",
       requestId ? `request id: ${requestId}` : ""
     ].filter(Boolean).join(" ");
+  }
+  if (/stream disconnected before completion|socket hang up|ECONNRESET|terminated|aborted/i.test(text)) {
+    return "上游图片生成中途断流了，请重试一次；如果连续失败，可以先改成 1:1 / medium，或稍后再试。";
+  }
+  if (/timeout|请求超时|timed out/i.test(text)) {
+    return "上游生成超时了，请重试；如果提示词或尺寸较重，建议先用 1:1 / medium 出草稿。";
   }
   return text;
 }
@@ -548,7 +554,7 @@ async function handleModelsProbe(req, res) {
   }
 }
 
-async function callUpstreamImage(apiUrl, fetchOptions, timeoutMs = 120000, maxAttempts = 4) {
+async function callUpstreamImage(apiUrl, fetchOptions, timeoutMs = 240000, maxAttempts = 2) {
   let last;
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const controller = new AbortController();
@@ -625,7 +631,7 @@ async function handleImageFlow(req, res, mode) {
         : { ...fetchOptions, body: JSON.stringify(currentBody) };
       let upstreamResult;
       try {
-        upstreamResult = await callUpstreamImage(apiUrl, currentFetchOptions, 120000, 4);
+        upstreamResult = await callUpstreamImage(apiUrl, currentFetchOptions, 240000, 2);
       } catch (error) {
         upstreamErrors.push({ index: i + 1, message: error.name === "AbortError" ? "请求超时" : error.message });
         if (!shouldSplitBatch) throw error;
