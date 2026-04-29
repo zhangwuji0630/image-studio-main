@@ -13,7 +13,7 @@
     <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512.png" />
     <link rel="icon" href="./icons/icon-192.png" />
-    <link rel="stylesheet" href="./styles.css?v=image-studio-pwa-v27" />
+    <link rel="stylesheet" href="./styles.css?v=image-studio-pwa-v33" />
   </head>
   <body>
     <div class="app-shell">
@@ -54,22 +54,12 @@
           <div class="create-stage" id="createStage">
             <section class="empty-state" id="emptyState">
               <div class="empty-orb">✦</div>
-              <h1>你想创作什么？</h1>
-              <p>点一个灵感，或直接在下方输入画面。</p>
-              <div class="inspiration-grid" aria-label="提示词灵感">
-                <button type="button" data-snippet="韩国女生，首尔街头，中景俯拍，傍晚街灯，电影感，真实摄影，超清细节。">
-                  <strong>街头人像</strong><span>首尔街头</span>
-                </button>
-                <button type="button" data-snippet="白色陶瓷杯放在木桌上，自然窗光，极简背景，商业摄影，高级留白，柔和阴影。">
-                  <strong>产品海报</strong><span>自然窗光</span>
-                </button>
-                <button type="button" data-snippet="窗边橘猫，柔和自然光，浅景深，写实摄影，温暖安静氛围，毛发细节清晰。">
-                  <strong>宠物写真</strong><span>温暖氛围</span>
-                </button>
-                <button type="button" data-snippet="雨夜城市街道，霓虹灯反射，湿润路面，电影感构图，浅景深，高级暗色调。">
-                  <strong>雨夜霓虹</strong><span>电影感</span>
-                </button>
+              <div class="empty-title-row">
+                <h1>你想创作什么？</h1>
+                <button class="inspiration-refresh" type="button" id="refreshInspirationBtn">换一换</button>
               </div>
+              <p>点一个灵感，或直接在下方输入画面。</p>
+              <div class="inspiration-grid" id="inspirationGrid" aria-label="提示词灵感"></div>
             </section>
 
             <section class="generating-state" id="generatingState" hidden>
@@ -114,23 +104,25 @@
           </div>
 
           <div class="assistant-page-layout" id="promptAssistant">
-            <aside class="assistant-section-nav" aria-label="提示词助手分组">
-              <button class="assistant-section-tab active" type="button" data-assistant-section="foundation">画面基础</button>
-              <button class="assistant-section-tab" type="button" data-assistant-section="scene">场景构图</button>
-              <button class="assistant-section-tab" type="button" data-assistant-section="camera">摄影质感</button>
-              <button class="assistant-section-tab" type="button" data-assistant-section="output">输出控制</button>
-            </aside>
+            <div class="assistant-flow-tabs" aria-label="提示词助手流程">
+              <button class="assistant-section-tab active" type="button" data-assistant-section="foundation"><span>1</span>画面基础</button>
+              <button class="assistant-section-tab" type="button" data-assistant-section="scene"><span>2</span>结构版式</button>
+              <button class="assistant-section-tab" type="button" data-assistant-section="camera"><span>3</span>风格质感</button>
+              <button class="assistant-section-tab" type="button" data-assistant-section="output"><span>4</span>文字控制</button>
+            </div>
 
-            <div class="assistant-page-steps">
+            <div class="assistant-workbench">
+              <div class="assistant-stage-card">
+                <div class="assistant-page-steps">
               <section class="assistant-section-panel active" data-assistant-panel="foundation">
                 <section class="assistant-step">
-                  <h3>1 类型</h3>
+                  <h3>1 内容类型</h3>
                   <div class="assistant-options" data-flow-group="type" data-flow-mode="single"></div>
                 </section>
 
                 <section class="assistant-step">
-                  <h3>2 用途</h3>
-                  <div class="assistant-options" data-flow-group="usage" data-flow-mode="single"></div>
+                  <h3>2 主体方式</h3>
+                  <div class="assistant-options" data-flow-group="subjectMode" data-flow-mode="multi"></div>
                 </section>
 
                 <section class="assistant-step">
@@ -139,54 +131,54 @@
                 </section>
 
                 <section class="assistant-step">
-                  <h3>4 主体状态</h3>
-                  <div class="assistant-options" data-flow-group="pose" data-flow-mode="multi"></div>
+                  <h3>4 内容结构</h3>
+                  <div class="assistant-options" data-flow-group="structure" data-flow-mode="multi"></div>
                 </section>
               </section>
 
               <section class="assistant-section-panel" data-assistant-panel="scene">
                 <section class="assistant-step">
-                  <h3>5 场景</h3>
-                  <div class="assistant-options" data-flow-group="scene" data-flow-mode="multi"></div>
+                  <h3>5 画面版式</h3>
+                  <div class="assistant-options" data-flow-group="layout" data-flow-mode="multi"></div>
                 </section>
 
                 <section class="assistant-step">
-                  <h3>6 构图 / 版式</h3>
-                  <div class="assistant-options" data-flow-group="composition" data-flow-mode="multi"></div>
+                  <h3>6 结构补充</h3>
+                  <div class="assistant-options" data-flow-group="structure" data-flow-mode="multi"></div>
                 </section>
               </section>
 
               <section class="assistant-section-panel" data-assistant-panel="camera">
-                <section class="assistant-step">
+                <section class="assistant-step" data-photo-only>
                   <h3>7 镜头</h3>
                   <div class="assistant-options" data-flow-group="lens" data-flow-mode="single"></div>
                   <div class="assistant-options" data-flow-group="aperture" data-flow-mode="single"></div>
                 </section>
 
-                <section class="assistant-step">
+                <section class="assistant-step" data-photo-only>
                   <h3>8 光线</h3>
                   <div class="assistant-options" data-flow-group="lighting" data-flow-mode="multi"></div>
                 </section>
 
                 <section class="assistant-step">
-                  <h3>9 氛围</h3>
-                  <div class="assistant-options" data-flow-group="mood" data-flow-mode="multi"></div>
+                  <h3>9 视觉风格</h3>
+                  <div class="assistant-options" data-flow-group="style" data-flow-mode="multi"></div>
                 </section>
 
-                <section class="assistant-step">
-                  <h3>10 相机 / 滤镜</h3>
-                  <div class="assistant-options" data-flow-group="filter" data-flow-mode="single"></div>
-                </section>
-
-                <section class="assistant-step">
-                  <h3>11 材质质感</h3>
+                <section class="assistant-step" data-photo-only>
+                  <h3>10 材质质感</h3>
                   <div class="assistant-options" data-flow-group="material" data-flow-mode="multi"></div>
                 </section>
               </section>
 
               <section class="assistant-section-panel" data-assistant-panel="output">
                 <section class="assistant-step">
-                  <h3>12 细节</h3>
+                  <h3>11 文字方式</h3>
+                  <div class="assistant-options" data-flow-group="textMode" data-flow-mode="multi"></div>
+                </section>
+
+                <section class="assistant-step">
+                  <h3>12 细节控制</h3>
                   <div class="assistant-options" data-flow-group="detail" data-flow-mode="multi"></div>
                 </section>
 
@@ -195,11 +187,19 @@
                   <div class="assistant-options" data-flow-group="negative" data-flow-mode="multi"></div>
                 </section>
               </section>
-            </div>
+                </div>
 
-            <div class="assistant-page-preview-column">
-              <section class="assistant-preview sticky-preview">
-                <strong>生成提示词预览</strong>
+                <div class="assistant-step-controls">
+                  <button class="ghost-button" type="button" id="promptFlowPrev">上一步</button>
+                  <button class="dark-button" type="button" id="promptFlowNext">下一步</button>
+                </div>
+              </div>
+
+              <section class="assistant-preview">
+                <div class="assistant-preview-head">
+                  <strong>当前提示词</strong>
+                  <span>确认后填入底部输入框</span>
+                </div>
                 <textarea id="promptFlowPreview" readonly placeholder="选择上面的内容后，这里会生成提示词"></textarea>
                 <div class="assistant-actions">
                   <button class="assistant-apply" type="button" id="promptFlowApply">填入输入框</button>
@@ -255,7 +255,10 @@
       <section class="composer" aria-label="提示词输入">
         <div class="composer-main">
           <button class="composer-plus" type="button" id="composerPlusBtn" aria-label="展开更多输入功能" aria-controls="composerExtraPanel" aria-expanded="false">＋</button>
-          <textarea id="prompt" placeholder="写下你想生成的画面、风格、构图、光线、约束…"></textarea>
+          <div class="prompt-box">
+            <textarea id="prompt" placeholder="写下你想生成的画面、风格、构图、光线、约束…"></textarea>
+            <button class="prompt-random" type="button" id="randomPromptHintBtn">换一换</button>
+          </div>
           <button class="upload-card" type="button" id="addImageBtn">
             <span>▧</span>
             <strong>上传图片</strong>
@@ -297,7 +300,7 @@
       <label>格式<select id="outputFormat"><option value="png" selected>png</option><option value="webp">webp</option><option value="jpeg">jpeg</option></select></label>
       <label>数量<input id="count" type="number" min="1" max="4" value="1" /></label>
       <label>返回<select id="responseFormat"><option value="b64_json" selected>b64_json</option><option value="url">url</option></select></label>
-      <label>常用排除项<input id="avoid" type="text" value="不要文字，不要水印，不要畸形手指，不要低清晰度，不要过度磨皮" /></label>
+      <input id="avoid" type="hidden" value="" />
       <button class="ghost-button full" type="button" id="clearPrompt">清空提示词</button>
     </aside>
 
@@ -332,6 +335,6 @@
       </section>
     </div>
 
-    <script src="./app.js?v=image-studio-pwa-v27" defer></script>
+    <script src="./app.js?v=image-studio-pwa-v33" defer></script>
   </body>
 </html>

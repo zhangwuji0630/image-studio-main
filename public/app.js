@@ -11,34 +11,136 @@ const aspectSizeMap = {
   "2:3": "1024x1536",
 };
 const imgv1SupportedSizes = new Set(Object.values(aspectSizeMap));
-const promptFlowOptions = {
-  type: ["人像写真", "产品摄影", "食物饮品", "宠物写真", "海报设计"],
-  usage: ["电商主图", "小红书封面", "品牌海报", "杂志封面", "头像", "朋友圈氛围图", "详情页配图", "广告大片"],
-  pose: ["自然站姿", "坐姿", "行走中", "回头看镜头", "手拿道具", "直立摆放", "悬浮展示", "倾斜摆放", "使用中", "水珠附着", "热气腾腾", "手持展示"],
-  scene: ["纯色背景", "摄影棚", "木桌静物", "咖啡店", "街头", "海边", "卧室", "夜景霓虹", "极简空间"],
-  composition: ["特写", "中景", "全身", "俯拍", "平视", "低机位", "居中构图", "留白构图", "顶部留白", "左侧留白", "右侧留白", "适合放标题文字"],
+const promptFlowTypes = ["人像写真", "产品摄影", "攻略图", "信息图", "小红书封面", "海报设计", "PPT配图", "教程步骤图", "电商详情图", "公众号首图", "清单卡片", "路线地图", "插画图标"];
+const promptFlowBaseOptions = {
+  subjectMode: ["明确主体", "多元素组合", "背景为主", "图文并重", "抽象概念", "场景故事"],
   lens: ["24mm 广角", "35mm 纪实", "50mm 标准", "85mm 人像", "100mm 微距"],
   aperture: ["f/1.8 浅景深", "f/2.8 商业摄影", "f/5.6 清晰主体", "f/8 全画面清晰"],
   lighting: ["自然窗光", "柔和散射光", "影棚布光", "逆光", "边缘光", "黄昏暖光", "夜景霓虹", "高级暗调光影"],
-  mood: ["清新自然", "高级冷淡", "温暖治愈", "电影感", "复古怀旧", "奢华精致", "活泼明亮", "安静松弛", "神秘暗调"],
-  filter: ["富士胶片风格", "富士 Classic Chrome", "富士 Eterna", "索尼清晰数码风格", "佳能暖色人像", "徕卡街拍风格", "Kodak Portra 400", "Cinestill 800T"],
   material: ["玻璃通透", "金属反光", "陶瓷温润", "木质纹理", "皮革质感", "布料纹理", "液体光泽", "水珠细节", "磨砂质感", "高级哑光"],
-  detail: ["高清细节", "真实材质", "干净背景", "高级留白", "商业摄影质感", "真实阴影", "皮肤纹理自然", "玻璃/金属/液体质感"],
-  negative: ["不要文字", "不要水印", "不要低清晰度", "不要畸形手指", "不要多余肢体", "不要过度磨皮", "不要脏乱背景"]
+  negative: ["不要水印", "不要低清晰度", "不要乱码文字", "不要错别字", "不要畸形手指", "不要多余肢体", "不要脏乱背景"]
 };
+const promptFlowPresets = {
+  "人像写真": {
+    template: "portrait",
+    structure: ["半身人像", "全身人像", "侧脸特写", "回眸", "坐姿", "行走中", "自然抓拍", "杂志大片"],
+    layout: ["居中构图", "三分法构图", "特写", "中景", "全身", "低机位", "浅景深", "背景虚化"],
+    style: ["清新自然", "高级冷淡", "电影感", "复古胶片", "甜酷写真", "韩系写真", "日系生活感", "时尚杂志"],
+    textMode: ["不要文字", "预留标题区域", "带短标题", "带标签贴纸文字"],
+    detail: ["皮肤纹理自然", "发丝细节", "服装质感", "自然表情", "真实光影", "高级修图质感", "干净背景"]
+  },
+  "产品摄影": {
+    template: "product",
+    structure: ["主体居中", "产品组合", "使用场景", "细节特写", "卖点展示", "包装打开", "悬浮展示", "水珠附着"],
+    layout: ["电商主图", "详情页配图", "居中构图", "顶部留白", "左右留白", "大面积干净背景", "近景特写", "俯拍摆拍"],
+    style: ["商业摄影", "极简高级", "清新小红书", "科技质感", "奢华精致", "自然生活方式", "柔和色调", "高端品牌感"],
+    textMode: ["不要文字", "预留标题区域", "带短标题", "带卖点标签", "只生成文字占位"],
+    detail: ["真实材质", "产品边缘清晰", "真实阴影", "干净背景", "商业布光", "高清细节", "反光自然"]
+  },
+  "攻略图": {
+    template: "guide",
+    structure: ["旅行攻略", "美食攻略", "购物攻略", "装修攻略", "穿搭攻略", "工具攻略", "避坑指南", "打卡清单", "路线规划", "时间线攻略"],
+    layout: ["小红书竖版", "卡片式排版", "分栏信息图", "手账拼贴", "地图路线风", "顶部大标题", "多模块内容区", "封面留白"],
+    style: ["清新小红书", "可爱手账", "极简高级", "旅行杂志", "彩色信息图", "扁平插画", "拼贴 scrapbook", "明亮活泼"],
+    textMode: ["带中文大标题", "带编号步骤文字", "带清单文字", "带标签贴纸文字", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["信息层级清晰", "图标丰富", "路线感明显", "模块分区清楚", "留白充足", "适合收藏", "封面感强"]
+  },
+  "信息图": {
+    template: "info",
+    structure: ["三步说明", "五点清单", "对比图", "流程图", "时间线", "数据看板", "FAQ问答", "知识卡片"],
+    layout: ["竖版信息图", "左右分栏", "上下分区", "卡片式布局", "图标加说明", "中心辐射结构", "表格对比", "模块化网格"],
+    style: ["极简信息图", "商务科技", "彩色扁平", "蓝白专业", "柔和渐变", "可爱图标", "现代 UI", "干净留白"],
+    textMode: ["带中文大标题", "带编号步骤文字", "带清单文字", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["信息层级清晰", "图标统一", "对齐整齐", "阅读路径明确", "干净背景", "高可读性", "模块边界清楚"]
+  },
+  "小红书封面": {
+    template: "cover",
+    structure: ["攻略封面", "探店封面", "好物分享", "穿搭封面", "教程封面", "种草封面", "合集封面", "避坑封面"],
+    layout: ["竖版封面", "顶部大标题", "人物/物品居中", "大面积留白", "拼贴布局", "贴纸标签", "标题区明显", "封面强视觉"],
+    style: ["清新小红书", "奶油色系", "可爱手账", "高级极简", "明亮活泼", "甜酷风", "韩系生活感", "彩色贴纸"],
+    textMode: ["带中文大标题", "带短标题", "带标签贴纸文字", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["封面感强", "标题区域醒目", "适合手机浏览", "主体突出", "色彩干净", "收藏感", "点击欲强"]
+  },
+  "海报设计": {
+    template: "poster",
+    structure: ["品牌海报", "活动海报", "电影海报", "促销海报", "新品发布", "节日海报", "概念海报", "展览海报"],
+    layout: ["竖版海报", "横版 banner", "中心主体", "大标题区域", "上下分区", "强视觉焦点", "高级留白", "版式层级"],
+    style: ["高级品牌感", "电影感", "极简现代", "复古杂志", "未来科技", "奢华精致", "潮流视觉", "强对比色"],
+    textMode: ["带中文大标题", "带短标题", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["视觉冲击", "信息层级清晰", "商业质感", "主体突出", "高级留白", "适合发布", "设计感强"]
+  },
+  "PPT配图": {
+    template: "ppt",
+    structure: ["封面背景", "章节页", "数据分析", "团队协作", "流程架构", "时间线", "战略规划", "科技概念"],
+    layout: ["横版 16:9", "左文右图", "右侧留白", "中心标题区", "渐变背景", "图标装饰", "模块分区", "商务封面"],
+    style: ["商务科技", "蓝白专业", "极简高级", "渐变玻璃", "未来感", "企业宣传", "数据可视化", "低饱和专业"],
+    textMode: ["预留标题区域", "只生成文字占位", "带短标题", "不要文字"],
+    detail: ["适合放 PPT 标题", "背景干净", "层次清晰", "不抢文字", "专业可信", "空间感", "高端商务"]
+  },
+  "教程步骤图": {
+    template: "tutorial",
+    structure: ["三步教程", "五步教程", "操作流程", "前后对比", "工具使用", "安装步骤", "学习笔记", "FAQ说明"],
+    layout: ["编号步骤", "流程箭头", "卡片分区", "截图占位", "图标加说明", "上下流程", "左右对比", "清单式布局"],
+    style: ["清晰教程风", "极简信息图", "可爱图标", "商务专业", "彩色卡片", "现代 UI", "白底干净", "学习笔记"],
+    textMode: ["带编号步骤文字", "带清单文字", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["步骤清楚", "阅读路径明确", "图标辅助", "层级清晰", "适合教学", "干净背景", "重点突出"]
+  },
+  "电商详情图": {
+    template: "product",
+    structure: ["卖点展示", "产品细节", "使用场景", "前后对比", "成分说明", "包装展示", "材质特写", "购买理由"],
+    layout: ["详情页长图", "左右分栏", "上下分区", "卡片式卖点", "大图加说明", "细节放大", "干净白底", "模块化排版"],
+    style: ["电商高级感", "极简干净", "清新小红书", "科技质感", "自然生活方式", "高端品牌感", "柔和商业风", "明亮可信"],
+    textMode: ["带卖点标签", "带短标题", "带清单文字", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["卖点清晰", "材质真实", "产品边缘清楚", "信息层级清晰", "商业质感", "干净背景", "适合转化"]
+  },
+  "公众号首图": {
+    template: "poster",
+    structure: ["文章首图", "观点表达", "知识科普", "活动预告", "人物访谈", "行业分析", "情绪封面", "专题封面"],
+    layout: ["横版封面", "大标题区域", "左文右图", "中心标题", "上下分区", "视觉焦点", "公众号头图比例", "留白充足"],
+    style: ["高级简洁", "商务专业", "知识感", "杂志风", "温暖叙事", "科技蓝", "低饱和", "品牌感"],
+    textMode: ["带中文大标题", "带短标题", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["适合文章封面", "标题醒目", "层级清楚", "不抢文字", "干净背景", "专业可信", "传播感"]
+  },
+  "清单卡片": {
+    template: "info",
+    structure: ["五点清单", "购物清单", "待办清单", "避坑清单", "推荐清单", "材料清单", "步骤清单", "收藏清单"],
+    layout: ["竖版卡片", "清单式布局", "勾选框样式", "卡片分区", "图标加文字", "顶部标题", "多模块内容区", "留白充足"],
+    style: ["清新小红书", "极简白底", "可爱手账", "彩色卡片", "柔和渐变", "学习笔记", "现代 UI", "明亮活泼"],
+    textMode: ["带清单文字", "带中文大标题", "带标签贴纸文字", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["清单感强", "信息层级清晰", "适合收藏", "阅读路径明确", "图标统一", "干净背景", "重点突出"]
+  },
+  "路线地图": {
+    template: "guide",
+    structure: ["旅行路线", "城市路线", "打卡路线", "一日路线", "三日路线", "交通路线", "地图节点", "时间线规划"],
+    layout: ["地图路线风", "路线节点", "时间线", "小红书竖版", "卡片式排版", "图标标注", "顶部大标题", "多模块内容区"],
+    style: ["旅行杂志", "清新小红书", "可爱地图", "扁平插画", "彩色信息图", "手账拼贴", "明亮活泼", "极简路线图"],
+    textMode: ["带中文大标题", "带编号步骤文字", "带标签贴纸文字", "只生成文字占位", "预留标题区域", "不要文字"],
+    detail: ["路线感明显", "节点清楚", "图标丰富", "信息层级清晰", "适合收藏", "地图感", "封面感强"]
+  },
+  "插画图标": {
+    template: "illustration",
+    structure: ["单个图标", "图标套图", "3D插画", "扁平插画", "可爱角色", "功能图标", "场景插画", "贴纸元素"],
+    layout: ["居中展示", "成套排列", "网格布局", "透明感背景", "圆形构图", "留白充足", "适合头像", "适合 App 图标"],
+    style: ["3D可爱", "扁平简洁", "圆润软萌", "玻璃拟态", "彩色渐变", "极简线性", "高级图标", "潮流贴纸"],
+    textMode: ["不要文字", "带短标题", "只生成文字占位"],
+    detail: ["边缘清晰", "形状统一", "色彩协调", "可识别度高", "干净背景", "细节精致", "适合复用"]
+  }
+};
+const promptFlowFallback = promptFlowPresets["攻略图"];
+const promptFlowOptions = { type: promptFlowTypes, ...promptFlowBaseOptions };
+const dynamicPromptGroups = ["structure", "layout", "style", "textMode", "detail"];
 const promptFlowState = {
   type: "",
-  usage: "",
   subject: "",
-  pose: [],
-  scene: [],
-  composition: [],
+  subjectMode: [],
+  structure: [],
+  layout: [],
   lens: "",
   aperture: "",
   lighting: [],
-  mood: [],
-  filter: "",
+  style: [],
   material: [],
+  textMode: [],
   detail: [],
   negative: []
 };
@@ -59,8 +161,8 @@ const els = {
   favoriteGrid: $("#favoriteGrid"), favoriteBlank: $("#favoriteBlank"), historyList: $("#historyList"), historyBlank: $("#historyBlank"), refreshHistoryBtn: $("#refreshHistoryBtn"), clearHistoryBtn: $("#clearHistoryBtn"),
   downloadAllBtn: $("#downloadAllBtn"), reusePromptBtn: $("#reusePromptBtn"), keyStatus: $("#keyStatus"), configStatus: $("#configStatus"), sizeHint: $("#sizeHint"),
   lightbox: $("#lightbox"), lightboxBackdrop: $("#lightboxBackdrop"), lightboxClose: $("#lightboxClose"), lightboxImage: $("#lightboxImage"), lightboxTitle: $("#lightboxTitle"), lightboxMeta: $("#lightboxMeta"), lightboxPrompt: $("#lightboxPrompt"), lightboxOpen: $("#lightboxOpen"), lightboxDownload: $("#lightboxDownload"), lightboxReuse: $("#lightboxReuse"), lightboxPrev: $("#lightboxPrev"), lightboxNext: $("#lightboxNext"),
-  mobileMenuBtn: $("#mobileMenuBtn"), composerPlusBtn: $("#composerPlusBtn"), composerExtraPanel: $("#composerExtraPanel"), sidebar: $("#appSidebar"),
-  promptAssistant: $("#promptAssistant"), promptFlowReset: $("#promptFlowResetTop"), promptFlowSubject: $("#promptFlowSubject"), promptFlowPreview: $("#promptFlowPreview"), promptFlowApply: $("#promptFlowApply"), promptFlowAppend: $("#promptFlowAppend")
+  mobileMenuBtn: $("#mobileMenuBtn"), composerPlusBtn: $("#composerPlusBtn"), composerExtraPanel: $("#composerExtraPanel"), sidebar: $("#appSidebar"), randomPromptHintBtn: $("#randomPromptHintBtn"), inspirationGrid: $("#inspirationGrid"), refreshInspirationBtn: $("#refreshInspirationBtn"),
+  promptAssistant: $("#promptAssistant"), promptFlowReset: $("#promptFlowResetTop"), promptFlowSubject: $("#promptFlowSubject"), promptFlowPreview: $("#promptFlowPreview"), promptFlowApply: $("#promptFlowApply"), promptFlowAppend: $("#promptFlowAppend"), promptFlowPrev: $("#promptFlowPrev"), promptFlowNext: $("#promptFlowNext")
 };
 
 let galleryImages = [];
@@ -75,7 +177,55 @@ let activeLightboxList = [];
 let activeLightboxIndex = 0;
 let isMobileExtrasOpen = false;
 let createState = "empty";
+const assistantSections = ["foundation", "scene", "camera", "output"];
+let activeAssistantSection = "foundation";
+const promptHintPool = [
+  "东京三天两夜旅行攻略封面，小红书竖版，顶部大标题区域，地图路线风，清新明亮。",
+  "新品护肤品电商主图，极简高级背景，产品居中，柔和棚拍光，真实阴影。",
+  "五步教程信息图，卡片式排版，编号步骤文字，图标辅助，信息层级清晰。",
+  "咖啡店探店小红书封面，手账拼贴，标签贴纸文字，温暖治愈氛围。",
+  "商务科技 PPT 封面背景，16:9 横版，右侧留白，蓝白渐变，专业可信。",
+  "城市美食攻略图，分栏信息图，打卡清单，彩色图标，适合收藏。",
+  "复古杂志风海报，中心主体，大面积留白，短标题区域，高级胶片色调。",
+  "路线地图风旅行攻略，时间线规划，多模块内容区，清新小红书风格。"
+];
+const inspirationPool = [
+  { title: "旅行攻略", sub: "路线地图", prompt: "东京三天两夜旅行攻略图，小红书竖版，地图路线风，打卡清单，多模块内容区，清新明亮。" },
+  { title: "探店封面", sub: "小红书", prompt: "咖啡店探店小红书封面，顶部大标题区域，贴纸标签，手账拼贴，温暖治愈氛围。" },
+  { title: "教程步骤", sub: "信息图", prompt: "五步教程信息图，卡片式排版，编号步骤文字，图标辅助，信息层级清晰，白底干净。" },
+  { title: "产品主图", sub: "电商", prompt: "新品护肤品电商主图，产品居中，极简高级背景，柔和棚拍光，真实材质，干净阴影。" },
+  { title: "PPT 封面", sub: "商务科技", prompt: "商务科技 PPT 封面背景，16:9 横版，右侧留白，蓝白渐变，空间感，专业可信。" },
+  { title: "美食攻略", sub: "清单卡片", prompt: "城市美食攻略图，清单卡片布局，彩色图标，店铺打卡感，适合收藏，清新小红书风。" },
+  { title: "复古海报", sub: "杂志风", prompt: "复古杂志风海报，中心主体，大面积留白，短标题区域，高级胶片色调，设计感强。" },
+  { title: "路线地图", sub: "时间线", prompt: "旅行路线地图风信息图，时间线规划，路线节点，图标丰富，层级清楚，封面感强。" },
+  { title: "知识卡片", sub: "极简", prompt: "知识卡片信息图，极简排版，中心标题区，三点说明，留白充足，高可读性。" },
+  { title: "电商详情", sub: "卖点展示", prompt: "产品详情页配图，卖点展示，左右分栏，材质特写，商业摄影质感，信息层级清晰。" },
+  { title: "头像插画", sub: "3D 可爱", prompt: "可爱 3D 头像插画，柔和色彩，干净背景，圆润造型，精致细节。" },
+  { title: "活动海报", sub: "强视觉", prompt: "活动宣传海报，强视觉焦点，顶部大标题区域，潮流配色，版式层级清楚。" }
+];
 
+function randomizePromptHint() {
+  if (!fields.prompt) return;
+  const current = fields.prompt.placeholder;
+  const candidates = promptHintPool.filter((item) => item !== current);
+  const next = candidates[Math.floor(Math.random() * candidates.length)] || promptHintPool[0];
+  fields.prompt.placeholder = next;
+}
+function shuffleList(list) {
+  return [...list].sort(() => Math.random() - 0.5);
+}
+function renderInspirations() {
+  if (!els.inspirationGrid) return;
+  els.inspirationGrid.innerHTML = "";
+  for (const item of shuffleList(inspirationPool).slice(0, 4)) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.snippet = item.prompt;
+    button.innerHTML = `<strong>${item.title}</strong><span>${item.sub}</span>`;
+    button.addEventListener("click", () => appendPromptSnippet(item.prompt));
+    els.inspirationGrid.append(button);
+  }
+}
 function isMobileViewport() {
   return window.matchMedia("(max-width: 768px)").matches;
 }
@@ -105,78 +255,181 @@ function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
+function normalizeSelections(list) {
+  return [...new Set((list || []).filter(Boolean))];
+}
+function resolveTextModes() {
+  const modes = normalizeSelections(promptFlowState.textMode);
+  const noTextIndex = modes.indexOf("不要文字");
+  if (noTextIndex >= 0 && modes.length > 1) return [modes[noTextIndex]];
+  return modes;
+}
+function joinPhrase(list, fallback = "") {
+  const clean = normalizeSelections(list);
+  return clean.length ? clean.join("、") : fallback;
+}
+function textModeSentence(modes) {
+  if (!modes.length) return "";
+  if (modes.includes("不要文字")) return "画面中不要生成文字。";
+  if (modes.includes("预留标题区域")) return `预留清晰的标题和文字区域${modes.length > 1 ? `，并呈现${modes.filter((m) => m !== "预留标题区域").join("、")}的视觉暗示` : ""}。`;
+  if (modes.includes("只生成文字占位")) return "使用文字占位块表现信息层级，不要求真实文字准确。";
+  return `画面可包含${modes.join("、")}，文字作为版式元素出现。`;
+}
+function resolveTextModeSelection(clicked, list) {
+  if (!list.includes(clicked)) return list;
+  if (clicked === "不要文字") return ["不要文字"];
+  return list.filter((item) => item !== "不要文字");
+}
+function buildNaturalPrompt() {
+  const type = promptFlowState.type || "创意图片";
+  const preset = promptFlowPresets[promptFlowState.type] || promptFlowFallback;
+  const template = preset.template || "general";
+  const subject = promptFlowState.subject || "合适的主体内容";
+  const subjectMode = joinPhrase(promptFlowState.subjectMode);
+  const structure = joinPhrase(promptFlowState.structure);
+  const layout = joinPhrase(promptFlowState.layout);
+  const style = joinPhrase(promptFlowState.style);
+  const detail = joinPhrase(promptFlowState.detail);
+  const textModes = resolveTextModes();
+  const photo = isPhotographyType();
+  const photoParts = [promptFlowState.lens, promptFlowState.aperture, joinPhrase(promptFlowState.lighting), joinPhrase(promptFlowState.material)].filter(Boolean).join("，");
+  let sentences = [];
+  if (template === "portrait") {
+    sentences.push(`一张${type}，以${subject}为核心${structure ? `，呈现${structure}` : ""}${layout ? `，采用${layout}` : ""}。`);
+    if (photoParts) sentences.push(`摄影表现使用${photoParts}，画面真实自然。`);
+    if (style) sentences.push(`整体风格为${style}。`);
+  } else if (template === "product") {
+    sentences.push(`一张${type}，围绕${subject}进行展示${structure ? `，重点表现${structure}` : ""}。`);
+    if (layout) sentences.push(`画面采用${layout}，主体清晰，适合商业展示。`);
+    if (photoParts) sentences.push(`使用${photoParts}，突出真实材质和产品质感。`);
+    if (style) sentences.push(`整体视觉为${style}。`);
+  } else if (["guide", "info", "tutorial"].includes(template)) {
+    sentences.push(`一张${type}，以${subject}为主题${structure ? `，内容围绕${structure}展开` : ""}。`);
+    if (layout) sentences.push(`采用${layout}组织画面，让信息结构清楚、阅读路径明确。`);
+    if (style) sentences.push(`整体视觉风格为${style}。`);
+  } else if (["cover", "poster"].includes(template)) {
+    sentences.push(`一张${type}，以${subject}为核心视觉${structure ? `，方向是${structure}` : ""}。`);
+    if (layout) sentences.push(`采用${layout}，形成清晰的封面层级和视觉焦点。`);
+    if (style) sentences.push(`整体风格为${style}。`);
+  } else if (template === "ppt") {
+    sentences.push(`一张${type}，围绕${subject}建立专业视觉背景${structure ? `，适合${structure}` : ""}。`);
+    if (layout) sentences.push(`采用${layout}，保留足够空间承载后续标题和内容。`);
+    if (style) sentences.push(`整体风格为${style}。`);
+  } else if (template === "illustration") {
+    sentences.push(`一张${type}，以${subject}为核心${structure ? `，表现为${structure}` : ""}。`);
+    if (layout) sentences.push(`采用${layout}，造型清楚，适合视觉复用。`);
+    if (style) sentences.push(`整体风格为${style}。`);
+  } else {
+    sentences.push(`一张${type}，以${subject}为主题${subjectMode ? `，主体方式为${subjectMode}` : ""}。`);
+    if (structure) sentences.push(`内容结构为${structure}。`);
+    if (layout) sentences.push(`画面版式采用${layout}。`);
+    if (style) sentences.push(`整体视觉风格为${style}。`);
+  }
+  const textSentence = textModeSentence(textModes);
+  if (textSentence) sentences.push(textSentence);
+  if (detail) sentences.push(`细节要求：${detail}。`);
+  if (!photo && subjectMode) sentences.splice(1, 0, `主体组织方式为${subjectMode}。`);
+  const negative = normalizeSelections(promptFlowState.negative).filter((item) => !(textModes.includes("不要文字") && ["不要乱码文字", "不要错别字"].includes(item)));
+  const promptText = sentences.join(" ").replace(/\s+/g, " ").trim();
+  return negative.length ? `${promptText}\n约束：${negative.join("，")}` : promptText;
+}
 function buildPromptFlowText() {
-  const parts = [];
-  if (promptFlowState.subject) parts.push(promptFlowState.subject);
-  if (promptFlowState.type) parts.push(promptFlowState.type);
-  if (promptFlowState.usage) parts.push(`用途：${promptFlowState.usage}`);
-  if (promptFlowState.pose.length) parts.push(`主体状态：${promptFlowState.pose.join("、")}`);
-  if (promptFlowState.scene.length) parts.push(`场景：${promptFlowState.scene.join("、")}`);
-  if (promptFlowState.composition.length) parts.push(`构图与视角：${promptFlowState.composition.join("、")}`);
-  if (promptFlowState.lens || promptFlowState.aperture) parts.push([promptFlowState.lens, promptFlowState.aperture].filter(Boolean).join("，"));
-  if (promptFlowState.lighting.length) parts.push(`光线：${promptFlowState.lighting.join("、")}`);
-  if (promptFlowState.mood.length) parts.push(`氛围：${promptFlowState.mood.join("、")}`);
-  if (promptFlowState.filter) parts.push(`风格：${promptFlowState.filter}`);
-  if (promptFlowState.material.length) parts.push(`材质质感：${promptFlowState.material.join("、")}`);
-  if (promptFlowState.detail.length) parts.push(`细节：${promptFlowState.detail.join("、")}`);
-  const promptText = parts.join("，");
-  const negativeText = promptFlowState.negative.length ? `\n约束：${promptFlowState.negative.join("，")}` : "";
-  return `${promptText}${negativeText}`.trim();
+  return buildNaturalPrompt();
+}
+function optionsForGroup(group) {
+  if (group === "type") return promptFlowTypes;
+  const preset = promptFlowPresets[promptFlowState.type] || promptFlowFallback;
+  if (dynamicPromptGroups.includes(group)) return preset[group] || [];
+  return promptFlowBaseOptions[group] || [];
+}
+function isPhotographyType() {
+  return ["人像写真", "产品摄影"].includes(promptFlowState.type);
+}
+function syncDynamicPromptState() {
+  for (const group of dynamicPromptGroups) {
+    const allowed = new Set(optionsForGroup(group));
+    promptFlowState[group] = (promptFlowState[group] || []).filter((item) => allowed.has(item));
+  }
+  if (!isPhotographyType()) {
+    promptFlowState.lens = "";
+    promptFlowState.aperture = "";
+    promptFlowState.lighting = [];
+    promptFlowState.material = [];
+  }
+}
+function updatePromptFlowVisibility() {
+  const photo = isPhotographyType();
+  document.querySelectorAll("[data-photo-only]").forEach((el) => { el.hidden = !photo; });
 }
 function updatePromptFlowPreview() {
   if (!els.promptFlowPreview) return;
   els.promptFlowPreview.value = buildPromptFlowText();
 }
 function renderPromptFlowGroup(group) {
-  const wrap = document.querySelector(`[data-flow-group="${group}"]`);
-  if (!wrap) return;
-  const mode = wrap.dataset.flowMode || "multi";
-  wrap.innerHTML = "";
-  for (const item of promptFlowOptions[group] || []) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = item;
-    const active = Array.isArray(promptFlowState[group]) ? promptFlowState[group].includes(item) : promptFlowState[group] === item;
-    btn.classList.toggle("active", active);
-    btn.addEventListener("click", () => {
-      if (mode === "single") {
-        promptFlowState[group] = promptFlowState[group] === item ? "" : item;
-      } else {
-        const list = Array.isArray(promptFlowState[group]) ? [...promptFlowState[group]] : [];
-        promptFlowState[group] = list.includes(item) ? list.filter((v) => v !== item) : [...list, item];
-      }
-      renderPromptFlowGroup(group);
-      updatePromptFlowPreview();
-    });
-    wrap.append(btn);
+  const wraps = document.querySelectorAll(`[data-flow-group="${group}"]`);
+  if (!wraps.length) return;
+  for (const wrap of wraps) {
+    const mode = wrap.dataset.flowMode || "multi";
+    wrap.innerHTML = "";
+    for (const item of optionsForGroup(group)) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = item;
+      const active = Array.isArray(promptFlowState[group]) ? promptFlowState[group].includes(item) : promptFlowState[group] === item;
+      btn.classList.toggle("active", active);
+      btn.addEventListener("click", () => {
+        if (mode === "single") {
+          promptFlowState[group] = promptFlowState[group] === item ? "" : item;
+        } else {
+          const list = Array.isArray(promptFlowState[group]) ? [...promptFlowState[group]] : [];
+          const nextList = list.includes(item) ? list.filter((v) => v !== item) : [...list, item];
+          promptFlowState[group] = group === "textMode" ? resolveTextModeSelection(item, nextList) : nextList;
+        }
+        if (group === "type") syncDynamicPromptState();
+        renderPromptFlow();
+      });
+      wrap.append(btn);
+    }
   }
 }
 function renderPromptFlow() {
-  Object.keys(promptFlowOptions).forEach(renderPromptFlowGroup);
+  document.querySelectorAll("[data-flow-group]").forEach((wrap) => renderPromptFlowGroup(wrap.dataset.flowGroup));
   if (els.promptFlowSubject) els.promptFlowSubject.value = promptFlowState.subject || "";
+  updatePromptFlowVisibility();
   updatePromptFlowPreview();
 }
 function resetPromptFlow() {
   promptFlowState.type = "";
-  promptFlowState.usage = "";
   promptFlowState.subject = "";
-  promptFlowState.pose = [];
-  promptFlowState.scene = [];
-  promptFlowState.composition = [];
+  promptFlowState.subjectMode = [];
+  promptFlowState.structure = [];
+  promptFlowState.layout = [];
   promptFlowState.lens = "";
   promptFlowState.aperture = "";
   promptFlowState.lighting = [];
-  promptFlowState.mood = [];
-  promptFlowState.filter = "";
+  promptFlowState.style = [];
   promptFlowState.material = [];
+  promptFlowState.textMode = [];
   promptFlowState.detail = [];
   promptFlowState.negative = [];
   renderPromptFlow();
 }
 function setAssistantSection(section) {
-  const target = section || "foundation";
+  const target = assistantSections.includes(section) ? section : "foundation";
+  activeAssistantSection = target;
   $$(".assistant-section-tab").forEach((btn) => btn.classList.toggle("active", btn.dataset.assistantSection === target));
   $$(".assistant-section-panel").forEach((panel) => panel.classList.toggle("active", panel.dataset.assistantPanel === target));
+  const index = assistantSections.indexOf(target);
+  if (els.promptFlowPrev) els.promptFlowPrev.disabled = index <= 0;
+  if (els.promptFlowNext) {
+    els.promptFlowNext.disabled = index >= assistantSections.length - 1;
+    els.promptFlowNext.textContent = index >= assistantSections.length - 1 ? "已到最后" : "下一步";
+  }
+}
+function stepAssistantSection(delta) {
+  const index = assistantSections.indexOf(activeAssistantSection);
+  const next = Math.max(0, Math.min(assistantSections.length - 1, index + delta));
+  setAssistantSection(assistantSections[next]);
 }
 function timeText(value) {
   if (!value) return "刚刚";
@@ -563,6 +816,10 @@ $$("[data-snippet]").forEach((b) => b.addEventListener("click", () => appendProm
 els.addStyleBtn?.addEventListener("click", addCustomStyle);
 els.promptFlowReset?.addEventListener("click", resetPromptFlow);
 $$(".assistant-section-tab").forEach((btn) => btn.addEventListener("click", () => setAssistantSection(btn.dataset.assistantSection)));
+els.promptFlowPrev?.addEventListener("click", () => stepAssistantSection(-1));
+els.promptFlowNext?.addEventListener("click", () => stepAssistantSection(1));
+els.randomPromptHintBtn?.addEventListener("click", randomizePromptHint);
+els.refreshInspirationBtn?.addEventListener("click", renderInspirations);
 els.promptFlowSubject?.addEventListener("input", () => { promptFlowState.subject = els.promptFlowSubject.value.trim(); updatePromptFlowPreview(); });
 els.promptFlowApply?.addEventListener("click", () => { const text = buildPromptFlowText(); if (!text) return; fields.prompt.value = text; fields.prompt.focus(); });
 els.promptFlowAppend?.addEventListener("click", () => { const text = buildPromptFlowText(); if (!text) return; fields.prompt.value = [fields.prompt.value.trim(), text].filter(Boolean).join("\n"); fields.prompt.focus(); });
@@ -607,7 +864,7 @@ window.addEventListener("resize", () => {
   }
 });
 
-loadConfig(); document.body.classList.add("view-create-active"); document.body.classList.remove("view-prompt-flow-active"); renderPromptFlow(); setAssistantSection("foundation"); renderGallery(); checkServer(); loadGallery(); loadHistory(); setCreateState("empty");
+loadConfig(); document.body.classList.add("view-create-active"); document.body.classList.remove("view-prompt-flow-active"); renderPromptFlow(); setAssistantSection("foundation"); randomizePromptHint(); renderInspirations(); renderGallery(); checkServer(); loadGallery(); loadHistory(); setCreateState("empty");
 document.documentElement.dataset.appReady = "true";
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
